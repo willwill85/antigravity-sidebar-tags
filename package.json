@@ -1,0 +1,35 @@
+{
+  "name": "antigravity-sidebar-tags",
+  "version": "1.0.0",
+  "description": "Tag navigation and instant project filtering for Google Antigravity's left sidebar — zero app bundle modification, Apple Silicon ElectronAsarIntegrity safe, and auto-update proof.",
+  "keywords": [
+    "antigravity",
+    "google-antigravity",
+    "agy",
+    "sidebar",
+    "tags",
+    "project-management",
+    "electron",
+    "cdp"
+  ],
+  "homepage": "https://github.com/willwill85/antigravity-sidebar-tags",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/willwill85/antigravity-sidebar-tags.git"
+  },
+  "license": "MIT",
+  "author": "willwill85",
+  "bin": {
+    "agy-tags": "./bin/cli.js"
+  },
+  "scripts": {
+    "start": "node ./src/daemon.js",
+    "install-service": "node ./bin/cli.js install",
+    "uninstall-service": "node ./bin/cli.js uninstall",
+    "inject": "node ./bin/cli.js inject",
+    "status": "node ./bin/cli.js status"
+  },
+  "engines": {
+    "node": ">=21.0.0"
+  }
+}

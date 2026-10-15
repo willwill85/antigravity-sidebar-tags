@@ -1,0 +1,230 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 540" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f8fafc"/>
+      <stop offset="100%" stop-color="#eef2ff"/>
+    </linearGradient>
+    <filter id="winShadow" x="-5%" y="-5%" width="110%" height="115%">
+      <feDropShadow dx="0" dy="12" stdDeviation="18" flood-color="#0f172a" flood-opacity="0.12"/>
+    </filter>
+    <filter id="popShadow" x="-10%" y="-10%" width="125%" height="130%">
+      <feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#0f172a" flood-opacity="0.18"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="880" height="540" rx="16" fill="url(#bgGrad)"/>
+
+  <!-- App Window Container -->
+  <g filter="url(#winShadow)" transform="translate(36, 28)">
+    <rect width="808" height="484" rx="12" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5"/>
+
+    <!-- Sidebar Background -->
+    <path d="M 0 12 Q 0 0 12 0 L 340 0 L 340 484 L 12 484 Q 0 484 0 472 Z" fill="#f9fafb"/>
+    <line x1="340" y1="0" x2="340" y2="484" stroke="#e5e7eb" stroke-width="1"/>
+
+    <!-- macOS Traffic Lights -->
+    <circle cx="22" cy="20" r="6" fill="#ef4444"/>
+    <circle cx="42" cy="20" r="6" fill="#f59e0b"/>
+    <circle cx="62" cy="20" r="6" fill="#10b981"/>
+
+    <!-- Top Inbox / Start conversation -->
+    <g transform="translate(16, 44)" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">
+      <text x="24" y="16" fill="#4b5563" font-size="13" font-weight="500">Inbox</text>
+      <text x="24" y="42" fill="#4b5563" font-size="13" font-weight="500">Start conversation</text>
+    </g>
+
+    <!-- Injected Tag Bar (#agy-project-tags-bar) -->
+    <g transform="translate(14, 102)" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">
+      <!-- Highlight ring indicating injected bar -->
+      <rect x="-4" y="-6" width="318" height="62" rx="8" fill="#eff6ff" fill-opacity="0.55" stroke="#bfdbfe" stroke-dasharray="4 3"/>
+
+      <!-- Row 1 of Tag Pills -->
+      <!-- 全部 37 -->
+      <g transform="translate(2, 0)">
+        <rect width="54" height="22" rx="6" fill="#f3f4f6" stroke="#d1d5db"/>
+        <text x="8" y="15" fill="#374151" font-size="11" font-weight="500">全部</text>
+        <text x="35" y="15" fill="#6b7280" font-size="10">37</text>
+      </g>
+
+      <!-- 硬件/固件 9 (Active) -->
+      <g transform="translate(62, 0)">
+        <rect width="84" height="22" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.2"/>
+        <circle cx="10" cy="11" r="3" fill="#2563eb"/>
+        <text x="17" y="15" fill="#2563eb" font-size="11" font-weight="600">硬件/固件</text>
+        <text x="71" y="15" fill="#2563eb" font-size="10" font-weight="600">9</text>
+      </g>
+
+      <!-- 包装/设计 8 -->
+      <g transform="translate(152, 0)">
+        <rect width="84" height="22" rx="6" fill="#f3f4f6" stroke="#d1d5db"/>
+        <circle cx="10" cy="11" r="3" fill="#db2777"/>
+        <text x="17" y="15" fill="#374151" font-size="11" font-weight="500">包装/设计</text>
+        <text x="71" y="15" fill="#6b7280" font-size="10">8</text>
+      </g>
+
+      <!-- AI媒体 5 -->
+      <g transform="translate(242, 0)">
+        <rect width="68" height="22" rx="6" fill="#f3f4f6" stroke="#d1d5db"/>
+        <circle cx="10" cy="11" r="3" fill="#d97706"/>
+        <text x="17" y="15" fill="#374151" font-size="11" font-weight="500">AI媒体</text>
+        <text x="55" y="15" fill="#6b7280" font-size="10">5</text>
+      </g>
+
+      <!-- Row 2 of Tag Pills -->
+      <!-- 软件/Web 8 -->
+      <g transform="translate(2, 27)">
+        <rect width="82" height="22" rx="6" fill="#f3f4f6" stroke="#d1d5db"/>
+        <circle cx="10" cy="11" r="3" fill="#059669"/>
+        <text x="17" y="15" fill="#374151" font-size="11" font-weight="500">软件/Web</text>
+        <text x="69" y="15" fill="#6b7280" font-size="10">8</text>
+      </g>
+
+      <!-- 算法/数据 7 -->
+      <g transform="translate(90, 27)">
+        <rect width="84" height="22" rx="6" fill="#f3f4f6" stroke="#d1d5db"/>
+        <circle cx="10" cy="11" r="3" fill="#7c3aed"/>
+        <text x="17" y="15" fill="#374151" font-size="11" font-weight="500">算法/数据</text>
+        <text x="71" y="15" fill="#6b7280" font-size="10">7</text>
+      </g>
+
+      <!-- + 标签 -->
+      <g transform="translate(180, 27)">
+        <rect width="50" height="22" rx="6" fill="#f3f4f6" stroke="#d1d5db"/>
+        <text x="9" y="15" fill="#4b5563" font-size="11" font-weight="500">+ 标签</text>
+      </g>
+    </g>
+
+    <!-- Projects Header -->
+    <g transform="translate(22, 178)" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">
+      <text x="0" y="12" fill="#6b7280" font-size="12" font-weight="500">Projects</text>
+      <text x="275" y="13" fill="#6b7280" font-size="14">🔍  ＋</text>
+    </g>
+
+    <!-- Filtered Project List -->
+    <g transform="translate(14, 204)" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">
+      <!-- Project Row 1 (Hovered/Selected) -->
+      <g transform="translate(0, 0)">
+        <rect width="312" height="34" rx="7" fill="#eff6ff"/>
+        <text x="12" y="21" fill="#111827" font-size="13" font-weight="600">esp32</text>
+        <!-- Tag Badge -->
+        <rect x="58" y="9" width="56" height="16" rx="4" fill="#dbeafe" stroke="#93c5fd"/>
+        <text x="64" y="20" fill="#2563eb" font-size="10" font-weight="500">硬件/固件</text>
+        <!-- Hover Tag Icon + Plus -->
+        <rect x="262" y="6" width="22" height="22" rx="5" fill="#dbeafe"/>
+        <text x="267" y="21" fill="#2563eb" font-size="12">🏷️</text>
+        <text x="291" y="21" fill="#4b5563" font-size="14">＋</text>
+      </g>
+
+      <!-- Project Row 2 -->
+      <g transform="translate(0, 38)">
+        <text x="12" y="21" fill="#374151" font-size="13" font-weight="500">icm42688</text>
+        <rect x="82" y="9" width="56" height="16" rx="4" fill="#dbeafe" stroke="#93c5fd"/>
+        <text x="88" y="20" fill="#2563eb" font-size="10" font-weight="500">硬件/固件</text>
+        <rect x="142" y="9" width="56" height="16" rx="4" fill="#ede9fe" stroke="#c4b5fd"/>
+        <text x="148" y="20" fill="#7c3aed" font-size="10" font-weight="500">算法/数据</text>
+      </g>
+
+      <!-- Project Row 3 -->
+      <g transform="translate(0, 76)">
+        <text x="12" y="21" fill="#374151" font-size="13" font-weight="500">imu_ble</text>
+        <rect x="70" y="9" width="56" height="16" rx="4" fill="#dbeafe" stroke="#93c5fd"/>
+        <text x="76" y="20" fill="#2563eb" font-size="10" font-weight="500">硬件/固件</text>
+      </g>
+
+      <!-- Project Row 4 -->
+      <g transform="translate(0, 114)">
+        <text x="12" y="21" fill="#374151" font-size="13" font-weight="500">ota_tool</text>
+        <rect x="72" y="9" width="56" height="16" rx="4" fill="#dbeafe" stroke="#93c5fd"/>
+        <text x="78" y="20" fill="#2563eb" font-size="10" font-weight="500">硬件/固件</text>
+      </g>
+
+      <!-- Project Row 5 -->
+      <g transform="translate(0, 152)">
+        <text x="12" y="21" fill="#374151" font-size="13" font-weight="500">C81_ble_ota</text>
+        <rect x="96" y="9" width="56" height="16" rx="4" fill="#dbeafe" stroke="#93c5fd"/>
+        <text x="102" y="20" fill="#2563eb" font-size="10" font-weight="500">硬件/固件</text>
+      </g>
+
+      <!-- Project Row 6 -->
+      <g transform="translate(0, 190)">
+        <text x="12" y="21" fill="#374151" font-size="13" font-weight="500">smart_skip_ble</text>
+        <rect x="114" y="9" width="56" height="16" rx="4" fill="#dbeafe" stroke="#93c5fd"/>
+        <text x="120" y="20" fill="#2563eb" font-size="10" font-weight="500">硬件/固件</text>
+      </g>
+    </g>
+
+    <!-- Floating Tag Management Popover (#agy-tag-popover) -->
+    <g filter="url(#popShadow)" transform="translate(368, 118)" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">
+      <rect width="252" height="270" rx="10" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.2"/>
+      <text x="14" y="24" fill="#4b5563" font-size="11" font-weight="600">项目标签：esp32</text>
+      <text x="228" y="24" fill="#9ca3af" font-size="12">✕</text>
+
+      <!-- Checklist Row 1 (Checked) -->
+      <g transform="translate(10, 36)">
+        <rect width="232" height="28" rx="6" fill="#f8fafc"/>
+        <rect x="8" y="7" width="14" height="14" rx="4" fill="#2563eb"/>
+        <text x="11" y="18" fill="#ffffff" font-size="10" font-weight="700">✓</text>
+        <circle cx="32" cy="14" r="4" fill="#2563eb"/>
+        <text x="42" y="18" fill="#111827" font-size="12" font-weight="500">硬件/固件</text>
+        <text x="198" y="18" fill="#9ca3af" font-size="11">删除</text>
+      </g>
+
+      <!-- Checklist Row 2 -->
+      <g transform="translate(10, 68)">
+        <rect x="8" y="7" width="14" height="14" rx="4" fill="none" stroke="#94a3b8" stroke-width="1.5"/>
+        <circle cx="32" cy="14" r="4" fill="#db2777"/>
+        <text x="42" y="18" fill="#374151" font-size="12">包装/设计</text>
+        <text x="198" y="18" fill="#9ca3af" font-size="11">删除</text>
+      </g>
+
+      <!-- Checklist Row 3 -->
+      <g transform="translate(10, 100)">
+        <rect x="8" y="7" width="14" height="14" rx="4" fill="none" stroke="#94a3b8" stroke-width="1.5"/>
+        <circle cx="32" cy="14" r="4" fill="#d97706"/>
+        <text x="42" y="18" fill="#374151" font-size="12">AI媒体</text>
+        <text x="198" y="18" fill="#9ca3af" font-size="11">删除</text>
+      </g>
+
+      <!-- Checklist Row 4 -->
+      <g transform="translate(10, 132)">
+        <rect x="8" y="7" width="14" height="14" rx="4" fill="none" stroke="#94a3b8" stroke-width="1.5"/>
+        <circle cx="32" cy="14" r="4" fill="#059669"/>
+        <text x="42" y="18" fill="#374151" font-size="12">软件/Web</text>
+        <text x="198" y="18" fill="#9ca3af" font-size="11">删除</text>
+      </g>
+
+      <!-- Checklist Row 5 -->
+      <g transform="translate(10, 164)">
+        <rect x="8" y="7" width="14" height="14" rx="4" fill="none" stroke="#94a3b8" stroke-width="1.5"/>
+        <circle cx="32" cy="14" r="4" fill="#7c3aed"/>
+        <text x="42" y="18" fill="#374151" font-size="12">算法/数据</text>
+        <text x="198" y="18" fill="#9ca3af" font-size="11">删除</text>
+      </g>
+
+      <!-- Divider -->
+      <line x1="12" y1="202" x2="240" y2="202" stroke="#e2e8f0" stroke-width="1"/>
+
+      <!-- Create Tag Input + Button -->
+      <rect x="12" y="212" width="174" height="26" rx="6" fill="#ffffff" stroke="#cbd5e1"/>
+      <text x="20" y="229" fill="#9ca3af" font-size="11">新建标签名称...</text>
+      <rect x="192" y="212" width="48" height="26" rx="6" fill="#2563eb"/>
+      <text x="205" y="229" fill="#ffffff" font-size="11" font-weight="500">添加</text>
+
+      <!-- Color Swatches -->
+      <g transform="translate(16, 250)">
+        <circle cx="6" cy="6" r="7" fill="#2563eb" stroke="#1e293b" stroke-width="2"/>
+        <circle cx="28" cy="6" r="6" fill="#db2777"/>
+        <circle cx="48" cy="6" r="6" fill="#d97706"/>
+        <circle cx="68" cy="6" r="6" fill="#059669"/>
+        <circle cx="88" cy="6" r="6" fill="#7c3aed"/>
+        <circle cx="108" cy="6" r="6" fill="#dc2626"/>
+        <circle cx="128" cy="6" r="6" fill="#0891b2"/>
+        <circle cx="148" cy="6" r="6" fill="#4f46e5"/>
+      </g>
+    </g>
+
+    <!-- Connector Arrow from Tag Badge to Popover -->
+    <path d="M 300 220 C 335 220, 335 160, 364 160" fill="none" stroke="#2563eb" stroke-width="1.5" stroke-dasharray="4 3"/>
+  </g>
+</svg>
