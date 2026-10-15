@@ -1,7 +1,8 @@
 (() => {
-  const INSTANCE_VERSION = 3;
+  const INSTANCE_VERSION = 5;
   const STORAGE_KEY = "agy_project_tags_v1";
   const FILES_PANEL_STATE_KEY = "agy_files_panel_state_v1";
+  const PI_ENGINE_STATE_KEY = "agy_pi_engine_state_v1";
   const PRESET_COLORS = [
     "#2563eb", // Blue
     "#db2777", // Pink
@@ -13,16 +14,14 @@
     "#4f46e5"  // Indigo
   ];
 
-  // If already running with current version, just refresh
   if (window.__AGY_TAG_NAV_INSTANCE__) {
     if (window.__AGY_TAG_NAV_INSTANCE__.version === INSTANCE_VERSION) {
       if (window.__AGY_INITIAL_PROJECT_TAGS__ && !localStorage.getItem(STORAGE_KEY)) {
         window.__AGY_TAG_NAV_INSTANCE__.setConfig(window.__AGY_INITIAL_PROJECT_TAGS__);
       }
       window.__AGY_TAG_NAV_INSTANCE__.refreshAll();
-      return "already_active_refreshed_v2";
+      return "already_active_refreshed_v4";
     }
-    // Upgrade from older version cleanly without resetting tag filter
     try {
       if (typeof window.__AGY_TAG_NAV_INSTANCE__._cleanupForUpgrade === "function") {
         window.__AGY_TAG_NAV_INSTANCE__._cleanupForUpgrade();
@@ -60,7 +59,7 @@
       const timer = setTimeout(() => {
         pendingBridgeCalls.delete(reqId);
         reject(new Error("Bridge call timed out"));
-      }, 4000);
+      }, 6000);
       pendingBridgeCalls.set(reqId, { resolve, reject, timer });
       try {
         window.__agyBridgeCall(JSON.stringify({ reqId, cmd, args }));
@@ -114,13 +113,35 @@
     return { height: 220, collapsed: false };
   }
 
+  function loadPiEngineState() {
+    try {
+      const raw = localStorage.getItem(PI_ENGINE_STATE_KEY);
+      if (raw) {
+        const p = JSON.parse(raw);
+        return {
+          engine: p.engine === "pi" ? "pi" : "agy",
+          model: p.model || "surplus/claude-haiku-5.5"
+        };
+      }
+    } catch (e) {}
+    return { engine: "agy", model: "surplus/claude-haiku-5.5" };
+  }
+
   let state = loadInitialConfig();
   if (!state.activeTag) state.activeTag = "all";
   let filesPanelPrefs = loadFilesPanelState();
+  let piEngineState = loadPiEngineState();
+  let piModelsCatalog = []; // Array<{ fullId, provider, id, name }>
 
   function saveFilesPanelPrefs() {
     try {
       localStorage.setItem(FILES_PANEL_STATE_KEY, JSON.stringify(filesPanelPrefs));
+    } catch (e) {}
+  }
+
+  function savePiEngineState() {
+    try {
+      localStorage.setItem(PI_ENGINE_STATE_KEY, JSON.stringify(piEngineState));
     } catch (e) {}
   }
 
@@ -244,7 +265,7 @@
         opacity: 1;
         background: rgba(128, 128, 128, 0.15);
       }
-      #agy-tag-popover, #agy-file-ctx-menu {
+      #agy-tag-popover, #agy-file-ctx-menu, #agy-pi-model-popover {
         position: fixed;
         z-index: 99999;
         border-radius: 10px;
@@ -263,8 +284,16 @@
         min-width: 188px;
         padding: 5px;
       }
+      #agy-pi-model-popover {
+        width: 280px;
+        padding: 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
       html[style*="dark"] #agy-tag-popover,
-      html[style*="dark"] #agy-file-ctx-menu {
+      html[style*="dark"] #agy-file-ctx-menu,
+      html[style*="dark"] #agy-pi-model-popover {
         background: #1e1f23;
         color: #f3f4f6;
         border-color: rgba(255, 255, 255, 0.14);
@@ -588,6 +617,226 @@
         margin: 4px 4px;
         background: rgba(128, 128, 128, 0.16);
       }
+
+      /* --- AGY / Pi Dual-Engine Selector & Chat UI --- */
+      #agy-pi-engine-bar {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        margin-right: 4px;
+        user-select: none;
+      }
+      .agy-engine-switch {
+        display: inline-flex;
+        align-items: center;
+        height: 26px;
+        padding: 2px;
+        border-radius: 999px;
+        background: rgba(128, 128, 128, 0.12);
+        border: 1px solid rgba(128, 128, 128, 0.18);
+      }
+      .agy-engine-opt {
+        border: none;
+        background: transparent;
+        color: inherit;
+        font-size: 11px;
+        font-weight: 500;
+        height: 20px;
+        padding: 0 8px;
+        border-radius: 999px;
+        cursor: pointer;
+        opacity: 0.7;
+        transition: all 0.14s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        white-space: nowrap;
+      }
+      .agy-engine-opt:hover {
+        opacity: 1;
+      }
+      .agy-engine-opt.active-agy {
+        opacity: 1;
+        font-weight: 600;
+        background: #2563eb;
+        color: #ffffff;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+      }
+      .agy-engine-opt.active-pi {
+        opacity: 1;
+        font-weight: 600;
+        background: #7c3aed;
+        color: #ffffff;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+      }
+      #agy-pi-model-trigger {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        height: 26px;
+        padding: 0 9px;
+        border-radius: 999px;
+        font-size: 11.5px;
+        font-weight: 600;
+        border: 1px solid rgba(124, 58, 237, 0.35);
+        background: rgba(124, 58, 237, 0.1);
+        color: #7c3aed;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: all 0.12s ease;
+      }
+      html[style*="dark"] #agy-pi-model-trigger {
+        background: rgba(139, 92, 246, 0.2);
+        color: #c4b5fd;
+        border-color: rgba(139, 92, 246, 0.4);
+      }
+      #agy-pi-model-trigger:hover {
+        background: rgba(124, 58, 237, 0.18);
+      }
+      #agy-pi-send-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        height: 26px;
+        padding: 0 10px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 600;
+        border: none;
+        background: #7c3aed;
+        color: #ffffff;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: opacity 0.12s ease;
+      }
+      #agy-pi-send-btn:hover {
+        opacity: 0.92;
+      }
+      .agy-pi-mode-card-ring {
+        box-shadow: 0 0 0 1.5px rgba(124, 58, 237, 0.45) !important;
+      }
+      .agy-pi-model-group-title {
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        opacity: 0.55;
+        padding: 4px 6px 2px 6px;
+      }
+      .agy-pi-model-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 5px 8px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 12px;
+      }
+      .agy-pi-model-item:hover {
+        background: rgba(124, 58, 237, 0.12);
+      }
+      .agy-pi-model-item.selected {
+        background: rgba(124, 58, 237, 0.16);
+        color: #7c3aed;
+        font-weight: 600;
+      }
+      html[style*="dark"] .agy-pi-model-item.selected {
+        color: #c4b5fd;
+      }
+
+      /* --- Pi Conversation Stream Cards --- */
+      #agy-pi-turns-container {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        width: 100%;
+        max-width: 768px;
+        margin: 12px auto 20px auto;
+        padding: 0 16px;
+      }
+      .agy-pi-turn-card {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        border-radius: 12px;
+        border: 1px solid rgba(124, 58, 237, 0.25);
+        background: rgba(124, 58, 237, 0.03);
+        padding: 12px 14px;
+      }
+      .agy-pi-user-bubble {
+        align-self: flex-end;
+        background: rgba(128, 128, 128, 0.12);
+        padding: 7px 12px;
+        border-radius: 12px 12px 3px 12px;
+        font-size: 13.5px;
+        max-width: 88%;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+      .agy-pi-assistant-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        font-size: 11.5px;
+      }
+      .agy-pi-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 2px 8px;
+        border-radius: 999px;
+        font-weight: 600;
+        background: rgba(124, 58, 237, 0.14);
+        color: #7c3aed;
+      }
+      html[style*="dark"] .agy-pi-badge {
+        background: rgba(139, 92, 246, 0.22);
+        color: #c4b5fd;
+      }
+      .agy-pi-ctx-pill {
+        font-size: 10.5px;
+        opacity: 0.65;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .agy-pi-tools-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+      }
+      .agy-pi-tool-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 11px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        padding: 2px 7px;
+        border-radius: 5px;
+        background: rgba(128, 128, 128, 0.1);
+        border: 1px solid rgba(128, 128, 128, 0.16);
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .agy-pi-response-body {
+        font-size: 13.5px;
+        line-height: 1.6;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+      .agy-pi-stop-btn {
+        border: 1px solid rgba(239, 68, 68, 0.4);
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+        border-radius: 6px;
+        padding: 1px 7px;
+        font-size: 11px;
+        font-weight: 600;
+        cursor: pointer;
+      }
     `;
   }
 
@@ -755,8 +1004,12 @@
     return list;
   }
 
-  // --- Active Project Detection for Files Panel ---
   let manualSelectedProjectId = null;
+
+  function getCurrentConversationId() {
+    const m = window.location.pathname.match(/^\/c\/([^/?#]+)/);
+    return m ? m[1] : null;
+  }
 
   function detectCurrentActiveProject() {
     const found = findReactProviders();
@@ -778,7 +1031,6 @@
       };
     };
 
-    // 1. Check ?section=<projectId> in URL
     try {
       const params = new URLSearchParams(window.location.search);
       const sec = params.get("section");
@@ -786,17 +1038,14 @@
       if (bySec) return bySec;
     } catch (e) {}
 
-    // 2. Check /p/<projectId> in pathname
     const pMatch = window.location.pathname.match(/^\/p\/([^/?#]+)/);
     if (pMatch) {
       const byP = getProjectById(pMatch[1]);
       if (byP) return byP;
     }
 
-    // 3. Check /c/<conversationId> in pathname via sidebarSectionsProvider
-    const cMatch = window.location.pathname.match(/^\/c\/([^/?#]+)/);
-    if (cMatch && found.ssp) {
-      const convId = cMatch[1];
+    const convId = getCurrentConversationId();
+    if (convId && found.ssp) {
       if (found.ssp.conversationsByProject instanceof Map) {
         for (const [pid, convList] of found.ssp.conversationsByProject.entries()) {
           if (Array.isArray(convList) && convList.some(c => c.cascadeId === convId || c.conversation?.conversationId === convId)) {
@@ -819,21 +1068,19 @@
       }
     }
 
-    // 4. Fallback to manually clicked project in sidebar
     if (manualSelectedProjectId) {
       const byManual = getProjectById(manualSelectedProjectId);
       if (byManual) return byManual;
     }
 
-    // 5. Fallback to first active project
     const allProjs = getActiveProjectsList();
     return allProjs.find(p => p.folderPath) || null;
   }
 
   // --- Project Files Browser State & Rendering ---
-  let currentFilesProject = null; // { id, name, folderPath }
-  const expandedDirs = new Set(); // full directory paths that are expanded
-  const dirEntriesCache = new Map(); // dirPath -> Array<{ name, path, isDir, size }>
+  let currentFilesProject = null;
+  const expandedDirs = new Set();
+  const dirEntriesCache = new Map();
   let selectedFilePath = null;
   let recentlyOpenedPath = null;
 
@@ -896,8 +1143,8 @@
   function ensureFilesPanelDom() {
     const listEl = document.querySelector('[data-testid="conversation-list-sidebar"]');
     if (!listEl) return null;
-    const p2 = listEl.parentElement?.parentElement; // flex-1 min-h-0 overflow-y-auto
-    const p3 = p2?.parentElement; // h-full w-full flex flex-col pb-2 bg-sidebar
+    const p2 = listEl.parentElement?.parentElement;
+    const p3 = p2?.parentElement;
     if (!p2 || !p3) return null;
 
     let panel = document.getElementById("agy-project-files-panel");
@@ -910,7 +1157,6 @@
         panel.style.height = `${filesPanelPrefs.height}px`;
       }
 
-      // Top drag resizer
       const resizer = document.createElement("div");
       resizer.id = "agy-files-resizer";
       resizer.title = "上下拖动调整 Files 窗口高度";
@@ -936,7 +1182,6 @@
       };
       panel.appendChild(resizer);
 
-      // Header
       const header = document.createElement("div");
       header.className = "agy-files-header";
 
@@ -964,7 +1209,6 @@
       const actions = document.createElement("div");
       actions.className = "agy-files-actions";
 
-      // Reveal root in Finder button
       const finderBtn = document.createElement("button");
       finderBtn.type = "button";
       finderBtn.className = "agy-files-icon-btn";
@@ -977,7 +1221,6 @@
         }
       };
 
-      // Refresh button
       const refreshBtn = document.createElement("button");
       refreshBtn.type = "button";
       refreshBtn.className = "agy-files-icon-btn";
@@ -995,12 +1238,10 @@
       header.appendChild(actions);
       panel.appendChild(header);
 
-      // Tree body
       const tree = document.createElement("div");
       tree.id = "agy-files-tree";
       panel.appendChild(tree);
 
-      // Insert right after p2 inside p3
       if (p2.nextSibling) {
         p3.insertBefore(panel, p2.nextSibling);
       } else {
@@ -1092,7 +1333,6 @@
           row.appendChild(meta);
         }
 
-        // Single click: select row; if folder, toggle expand
         row.onclick = async (e) => {
           e.stopPropagation();
           selectedFilePath = item.path;
@@ -1107,7 +1347,6 @@
           renderFilesTree(false);
         };
 
-        // Double click: open with system default app (for files) or open in Finder
         row.ondblclick = (e) => {
           e.stopPropagation();
           e.preventDefault();
@@ -1117,7 +1356,6 @@
           }
         };
 
-        // Right click: open context menu (Reveal in Finder / Open with Default App / Copy Path)
         row.oncontextmenu = (e) => {
           e.preventDefault();
           e.stopPropagation();
@@ -1144,7 +1382,6 @@
     try {
       await callBridge("revealInFinder", { targetPath });
     } catch (e) {
-      // Fallback to electronNativeFeature.revealInFilePicker if available
       const found = findReactProviders();
       if (found?.enf?.revealInFilePicker) {
         found.enf.revealInFilePicker(`file://${encodeURI(targetPath)}`);
@@ -1171,9 +1408,15 @@
     if (existing) existing.remove();
   }
 
+  function closePiModelPopover() {
+    const existing = document.getElementById("agy-pi-model-popover");
+    if (existing) existing.remove();
+  }
+
   function openFileContextMenu(item, clientX, clientY) {
     closeFileContextMenu();
     closeTagPopover();
+    closePiModelPopover();
 
     const menu = document.createElement("div");
     menu.id = "agy-file-ctx-menu";
@@ -1234,6 +1477,440 @@
     menu.style.left = `${left}px`;
   }
 
+  // --- AGY / Pi Dual-Engine Bar & Execution ---
+  async function loadPiModelsIfNeeded() {
+    if (piModelsCatalog.length > 0) return piModelsCatalog;
+    try {
+      const res = await callBridge("getPiModels");
+      if (res && Array.isArray(res.models)) {
+        piModelsCatalog = res.models;
+        if (!piEngineState.model && res.defaultFullId) {
+          piEngineState.model = res.defaultFullId;
+          savePiEngineState();
+        }
+      }
+    } catch (e) {}
+    return piModelsCatalog;
+  }
+
+  function renderPiEngineBar() {
+    const nativeModelBtn = document.querySelector('[data-testid="model-selector-trigger"]');
+    if (!nativeModelBtn) return;
+
+    const btnWrapper = nativeModelBtn.parentElement; // div.min-w-0
+    const rowContainer = btnWrapper?.parentElement; // div.min-w-0.no-focus-agent-input
+    if (!rowContainer) return;
+
+    rowContainer.style.display = "inline-flex";
+    rowContainer.style.alignItems = "center";
+    rowContainer.style.gap = "4px";
+
+    let bar = document.getElementById("agy-pi-engine-bar");
+    if (!bar) {
+      bar = document.createElement("div");
+      bar.id = "agy-pi-engine-bar";
+      rowContainer.insertBefore(bar, btnWrapper);
+    }
+
+    const isPi = piEngineState.engine === "pi";
+    nativeModelBtn.style.display = isPi ? "none" : "";
+
+    // Highlight input card ring when in Pi mode
+    let footer = rowContainer;
+    while (footer && !footer.className?.includes?.("input-footer")) {
+      footer = footer.parentElement;
+    }
+    const inputCard = footer?.parentElement;
+    if (inputCard) {
+      if (isPi) inputCard.classList.add("agy-pi-mode-ring");
+      else inputCard.classList.remove("agy-pi-mode-ring");
+    }
+
+    const sig = `${piEngineState.engine}|${piEngineState.model}`;
+    if (bar.getAttribute("data-sig") === sig) return;
+    bar.setAttribute("data-sig", sig);
+    bar.innerHTML = "";
+
+    // 1. Segmented Engine Switcher (AGY vs Pi)
+    const sw = document.createElement("div");
+    sw.className = "agy-engine-switch";
+
+    const agyOpt = document.createElement("button");
+    agyOpt.type = "button";
+    agyOpt.className = "agy-engine-opt" + (!isPi ? " active-agy" : "");
+    agyOpt.title = "使用本机 Antigravity (AGY) 引擎";
+    agyOpt.innerHTML = `<span>⚡ AGY</span>`;
+    agyOpt.onclick = (e) => {
+      e.stopPropagation();
+      piEngineState.engine = "agy";
+      savePiEngineState();
+      renderPiEngineBar();
+    };
+
+    const piOpt = document.createElement("button");
+    piOpt.type = "button";
+    piOpt.className = "agy-engine-opt" + (isPi ? " active-pi" : "");
+    piOpt.title = "切换到本机 Pi 引擎（可选全部第三方模型，共享当前项目与上下文）";
+    piOpt.innerHTML = `<span>🥧 Pi</span>`;
+    piOpt.onclick = async (e) => {
+      e.stopPropagation();
+      piEngineState.engine = "pi";
+      savePiEngineState();
+      await loadPiModelsIfNeeded();
+      renderPiEngineBar();
+    };
+
+    sw.appendChild(agyOpt);
+    sw.appendChild(piOpt);
+    bar.appendChild(sw);
+
+    // 2. When Pi engine is active, show Pi internal model selector + Send button
+    if (isPi) {
+      const modelTrig = document.createElement("button");
+      modelTrig.type = "button";
+      modelTrig.id = "agy-pi-model-trigger";
+      modelTrig.title = "点击选择 Pi 内部模型 (~/.pi/agent/models.json)";
+      const shortModel = piEngineState.model || "surplus/claude-haiku-5.5";
+      modelTrig.innerHTML = `<span>${escapeHtml(shortModel)}</span><span style="opacity:0.65">▾</span>`;
+      modelTrig.onclick = async (e) => {
+        e.stopPropagation();
+        await loadPiModelsIfNeeded();
+        openPiModelPopover(modelTrig);
+      };
+      bar.appendChild(modelTrig);
+
+      const sendBtn = document.createElement("button");
+      sendBtn.type = "button";
+      sendBtn.id = "agy-pi-send-btn";
+      sendBtn.title = "发送当前输入框内容给 Pi 执行 (快捷键: Enter)";
+      sendBtn.innerHTML = `<span>发送给 Pi ↵</span>`;
+      sendBtn.onclick = (e) => {
+        e.stopPropagation();
+        submitPromptToPi();
+      };
+      bar.appendChild(sendBtn);
+    }
+  }
+
+  function openPiModelPopover(anchorEl) {
+    closePiModelPopover();
+    closeTagPopover();
+    closeFileContextMenu();
+
+    const pop = document.createElement("div");
+    pop.id = "agy-pi-model-popover";
+    document.body.appendChild(pop);
+
+    const searchInput = document.createElement("input");
+    searchInput.type = "text";
+    searchInput.className = "agy-pop-input";
+    searchInput.placeholder = "搜索 Pi 模型 (如 haiku, sonnet, deepseek, grok)...";
+    pop.appendChild(searchInput);
+
+    const listBox = document.createElement("div");
+    listBox.className = "agy-pop-list";
+    listBox.style.maxHeight = "260px";
+    listBox.style.marginBottom = "0";
+    pop.appendChild(listBox);
+
+    function renderModelList(filterText = "") {
+      listBox.innerHTML = "";
+      const q = filterText.trim().toLowerCase();
+      const filtered = piModelsCatalog.filter(m =>
+        !q || m.fullId.toLowerCase().includes(q) || (m.name && m.name.toLowerCase().includes(q))
+      );
+
+      if (filtered.length === 0) {
+        listBox.innerHTML = `<div class="agy-files-empty">未找到匹配的模型</div>`;
+        return;
+      }
+
+      const byProvider = new Map();
+      for (const m of filtered) {
+        if (!byProvider.has(m.provider)) byProvider.set(m.provider, []);
+        byProvider.get(m.provider).push(m);
+      }
+
+      for (const [prov, mods] of byProvider.entries()) {
+        const gTitle = document.createElement("div");
+        gTitle.className = "agy-pi-model-group-title";
+        gTitle.textContent = prov;
+        listBox.appendChild(gTitle);
+
+        for (const m of mods) {
+          const item = document.createElement("div");
+          const isSel = piEngineState.model === m.fullId;
+          item.className = "agy-pi-model-item" + (isSel ? " selected" : "");
+          item.innerHTML = `
+            <span class="truncate">${escapeHtml(m.id)}</span>
+            <span style="font-size:10px;opacity:0.55">${isSel ? "✓ 当前" : (m.reasoning ? "🧠" : "")}</span>
+          `;
+          item.onclick = (e) => {
+            e.stopPropagation();
+            piEngineState.model = m.fullId;
+            savePiEngineState();
+            closePiModelPopover();
+            renderPiEngineBar();
+          };
+          listBox.appendChild(item);
+        }
+      }
+    }
+
+    searchInput.oninput = () => renderModelList(searchInput.value);
+    renderModelList("");
+
+    const rect = anchorEl.getBoundingClientRect();
+    const popRect = pop.getBoundingClientRect();
+    const top = Math.max(8, rect.top - popRect.height - 8);
+    const left = Math.min(window.innerWidth - 292, Math.max(8, rect.left));
+    pop.style.top = `${top}px`;
+    pop.style.left = `${left}px`;
+    setTimeout(() => searchInput.focus(), 20);
+  }
+
+  function readAndClearChatInput() {
+    const edEl = document.querySelector('[data-lexical-editor="true"]');
+    if (!edEl) return "";
+    const text = (edEl.__lexicalTextContent ?? edEl.innerText ?? "").trim();
+    if (!text) return "";
+
+    try {
+      edEl.focus();
+      document.execCommand("selectAll", false, null);
+      document.execCommand("delete", false, null);
+    } catch (e) {}
+    return text;
+  }
+
+  // --- Pi Turns Rendering in Conversation Stream ---
+  const activePiTurnsByConv = new Map(); // convId -> Array<TurnObj>
+  let loadedConvIdForPi = null;
+
+  function findConversationStreamContainer() {
+    const trigger = document.querySelector('[data-testid="model-selector-trigger"]');
+    let cur = trigger;
+    for (let i = 0; i < 14 && cur; i++) {
+      cur = cur.parentElement;
+    }
+    const msgWrapper = cur?.previousElementSibling;
+    if (!msgWrapper) return null;
+    const scrollArea = msgWrapper.querySelector(".overflow-y-auto");
+    if (!scrollArea) return null;
+    let container = document.getElementById("agy-pi-turns-container");
+    if (!container) {
+      container = document.createElement("div");
+      container.id = "agy-pi-turns-container";
+      scrollArea.appendChild(container);
+    } else if (container.parentElement !== scrollArea) {
+      scrollArea.appendChild(container);
+    }
+    return { scrollArea, container };
+  }
+
+  async function ensurePiTurnsLoadedForCurrentConv() {
+    const convId = getCurrentConversationId() || "global";
+    if (loadedConvIdForPi === convId && activePiTurnsByConv.has(convId)) {
+      renderPiTurnsInDom();
+      return;
+    }
+    loadedConvIdForPi = convId;
+    try {
+      const saved = await callBridge("getPiTurns", { conversationId: convId });
+      activePiTurnsByConv.set(convId, Array.isArray(saved) ? saved : []);
+      renderPiTurnsInDom();
+    } catch (e) {}
+  }
+
+  function renderPiTurnsInDom(autoScroll = false) {
+    const found = findConversationStreamContainer();
+    if (!found) return;
+    const { scrollArea, container } = found;
+    const convId = getCurrentConversationId() || "global";
+    const turns = activePiTurnsByConv.get(convId) || [];
+
+    if (turns.length === 0) {
+      container.style.display = "none";
+      container.innerHTML = "";
+      return;
+    }
+
+    container.style.display = "flex";
+    container.innerHTML = "";
+
+    for (const t of turns) {
+      const card = document.createElement("div");
+      card.className = "agy-pi-turn-card";
+
+      // User prompt bubble
+      const userBubble = document.createElement("div");
+      userBubble.className = "agy-pi-user-bubble";
+      userBubble.textContent = t.prompt;
+      card.appendChild(userBubble);
+
+      // Assistant header
+      const header = document.createElement("div");
+      header.className = "agy-pi-assistant-header";
+
+      const leftInfo = document.createElement("div");
+      leftInfo.style.display = "flex";
+      leftInfo.style.alignItems = "center";
+      leftInfo.style.gap = "8px";
+      leftInfo.innerHTML = `
+        <span class="agy-pi-badge">🥧 Pi · ${escapeHtml(t.model || "claude-haiku-5.5")}</span>
+        <span class="agy-pi-ctx-pill">📁 ${escapeHtml((t.projectPath || "").split("/").filter(Boolean).pop() || "项目目录")} · 🔗 共享 AGY 上下文</span>
+      `;
+      header.appendChild(leftInfo);
+
+      if (t.running && t.runId) {
+        const stopBtn = document.createElement("button");
+        stopBtn.type = "button";
+        stopBtn.className = "agy-pi-stop-btn";
+        stopBtn.textContent = "⏹ 停止";
+        stopBtn.onclick = () => {
+          callBridge("stopPiRun", { runId: t.runId });
+        };
+        header.appendChild(stopBtn);
+      }
+
+      card.appendChild(header);
+
+      // Tool calls list
+      if (Array.isArray(t.tools) && t.tools.length > 0) {
+        const toolsBox = document.createElement("div");
+        toolsBox.className = "agy-pi-tools-list";
+        for (const tl of t.tools) {
+          const pill = document.createElement("span");
+          pill.className = "agy-pi-tool-pill";
+          const icon = tl.name === "bash" ? "⚡" : tl.name === "read" ? "📖" : tl.name === "edit" ? "✏️" : "📝";
+          pill.textContent = `${icon} ${tl.name}: ${tl.summary || ""}`;
+          toolsBox.appendChild(pill);
+        }
+        card.appendChild(toolsBox);
+      }
+
+      // Response body
+      const body = document.createElement("div");
+      body.className = "agy-pi-response-body";
+      body.textContent = t.response || (t.running ? "⏳ Pi 正在思考并处理项目文件..." : "");
+      card.appendChild(body);
+
+      container.appendChild(card);
+    }
+
+    if (autoScroll) {
+      scrollArea.scrollTop = scrollArea.scrollHeight;
+    }
+  }
+
+  const unsyncedPiByConv = new Set(); // convIds that have new Pi turns not yet sent to AGY
+
+  window.__agyPiStreamEvent = function(evt) {
+    if (!evt || !evt.turnId) return;
+    const convId = evt.conversationId || getCurrentConversationId() || "global";
+    const list = activePiTurnsByConv.get(convId) || [];
+    const turn = list.find(t => t.turnId === evt.turnId);
+    if (!turn) return;
+
+    if (evt.type === "text_delta") {
+      turn.response = evt.fullResponse || (turn.response || "") + (evt.delta || "");
+      renderPiTurnsInDom(true);
+    } else if (evt.type === "tool_start") {
+      if (!Array.isArray(turn.tools)) turn.tools = [];
+      turn.tools.push({ name: evt.toolName, summary: evt.summary });
+      renderPiTurnsInDom(true);
+    } else if (evt.type === "done") {
+      turn.running = false;
+      if (evt.fullResponse) turn.response = evt.fullResponse;
+      unsyncedPiByConv.add(convId);
+      renderPiTurnsInDom(true);
+      refreshProjectFiles(true);
+    } else if (evt.type === "error") {
+      turn.running = false;
+      turn.response = (turn.response ? turn.response + "\n\n" : "") + `❌ 错误: ${evt.error}`;
+      renderPiTurnsInDom(true);
+    }
+  };
+
+  async function submitPromptToPi() {
+    const prompt = readAndClearChatInput();
+    if (!prompt) return;
+
+    const convId = getCurrentConversationId() || "global";
+    const activeProj = detectCurrentActiveProject();
+    const projectPath = activeProj?.folderPath || "";
+    const model = piEngineState.model || "surplus/claude-haiku-5.5";
+    const turnId = `pi_turn_${Date.now()}`;
+    const runId = `pi_run_${Date.now()}`;
+
+    const list = activePiTurnsByConv.get(convId) || [];
+    const newTurn = {
+      turnId,
+      runId,
+      conversationId: convId,
+      projectPath,
+      model,
+      prompt,
+      response: "",
+      tools: [],
+      running: true,
+      timestamp: Date.now()
+    };
+    list.push(newTurn);
+    activePiTurnsByConv.set(convId, list);
+    renderPiTurnsInDom(true);
+
+    try {
+      await callBridge("runPiPrompt", {
+        runId,
+        turnId,
+        conversationId: convId,
+        projectPath,
+        model,
+        prompt
+      });
+    } catch (e) {
+      newTurn.running = false;
+      newTurn.response = `❌ 启动 Pi 失败: ${e.message}`;
+      renderPiTurnsInDom(true);
+    }
+  }
+
+  // Intercept Enter key in chat input:
+  // - In Pi mode: intercept and send to Pi engine
+  // - In AGY mode: if Pi ran turns since last AGY message, append shared context note automatically
+  const onKeyDownCapture = (e) => {
+    if (e.key === "Enter" && !e.shiftKey && !e.isComposing && !e.metaKey && !e.ctrlKey && !e.altKey) {
+      const edEl = e.target?.closest?.('[data-lexical-editor="true"]');
+      if (!edEl) return;
+
+      if (piEngineState.engine === "pi") {
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        submitPromptToPi();
+        return;
+      }
+
+      // AGY mode: check if there are unsynced Pi turns in this conversation
+      const convId = getCurrentConversationId();
+      if (convId && unsyncedPiByConv.has(convId)) {
+        unsyncedPiByConv.delete(convId);
+        const turns = activePiTurnsByConv.get(convId) || [];
+        const lastTurn = turns[turns.length - 1];
+        if (lastTurn && lastTurn.response) {
+          const brief = lastTurn.response.replace(/\s+/g, " ").slice(0, 260);
+          const ctxNote = `\n\n[系统上下文同步：刚才用户切换到 Pi (${lastTurn.model}) 执行了「${lastTurn.prompt.slice(0, 80)}」，完整记录见 ~/.gemini/antigravity/brain/${convId}/pi_shared_context.md，Pi 回复摘要：${brief}]`;
+          try {
+            edEl.focus();
+            document.execCommand("insertText", false, ctxNote);
+          } catch (err) {}
+        }
+      }
+    }
+  };
+  window.addEventListener("keydown", onKeyDownCapture, true);
+
   // --- Tag Bar & Project Badges ---
   function hexToRgba(hex, alpha) {
     const clean = (hex || "#2563eb").replace("#", "");
@@ -1283,7 +1960,6 @@
 
     bar.innerHTML = "";
 
-    // 1. "全部" pill
     const allBtn = document.createElement("button");
     allBtn.type = "button";
     allBtn.className = "agy-tag-pill" + (state.activeTag === "all" ? " active" : "");
@@ -1293,7 +1969,6 @@
     allBtn.onclick = () => selectTagFilter("all");
     bar.appendChild(allBtn);
 
-    // 2. Each Tag pill
     for (const tag of state.tags) {
       const btn = document.createElement("button");
       btn.type = "button";
@@ -1310,7 +1985,6 @@
       bar.appendChild(btn);
     }
 
-    // 3. "未分类" pill
     if (counts.__untagged__ > 0 || state.activeTag === "__untagged__") {
       const untaggedBtn = document.createElement("button");
       untaggedBtn.type = "button";
@@ -1323,7 +1997,6 @@
       bar.appendChild(untaggedBtn);
     }
 
-    // 4. "+ 标签" manage button
     const addBtn = document.createElement("button");
     addBtn.type = "button";
     addBtn.className = "agy-tag-pill";
@@ -1386,7 +2059,6 @@
         });
       }
 
-      // 1. Render badges next to project title
       const titleRow = cardBtn.querySelector(".truncate.text-sm")?.parentElement;
       if (titleRow) {
         let badgesContainer = titleRow.querySelector(".agy-proj-badges");
@@ -1419,7 +2091,6 @@
         }
       }
 
-      // 2. Add a hover tag icon button in the right action bar of the project card
       const headerGroup = cardBtn.closest(".group\\/header");
       if (headerGroup) {
         const actionContainer = headerGroup.querySelector(".absolute.right-1");
@@ -1451,6 +2122,7 @@
   function openTagPopover(projectId, projectName, anchorEl) {
     closeTagPopover();
     closeFileContextMenu();
+    closePiModelPopover();
     const pop = document.createElement("div");
     pop.id = "agy-tag-popover";
     document.body.appendChild(pop);
@@ -1617,6 +2289,10 @@
     if (ctx && !ctx.contains(e.target)) {
       closeFileContextMenu();
     }
+    const piPop = document.getElementById("agy-pi-model-popover");
+    if (piPop && !piPop.contains(e.target) && !e.target.closest("#agy-pi-model-trigger")) {
+      closePiModelPopover();
+    }
   };
   document.addEventListener("mousedown", onMouseDown, true);
 
@@ -1626,6 +2302,7 @@
     if (window.location.href !== lastHref) {
       lastHref = window.location.href;
       refreshProjectFiles(false);
+      ensurePiTurnsLoadedForCurrentConv();
     }
   }
 
@@ -1652,6 +2329,8 @@
     renderTagBar();
     decorateProjectCards();
     refreshProjectFiles(false);
+    renderPiEngineBar();
+    ensurePiTurnsLoadedForCurrentConv();
   }
 
   let rafPending = false;
@@ -1668,12 +2347,19 @@
       } else {
         checkUrlChange();
       }
+      if (!document.getElementById("agy-pi-engine-bar")) {
+        renderPiEngineBar();
+      }
+      if (!document.getElementById("agy-pi-turns-container")) {
+        renderPiTurnsInDom(false);
+      }
       decorateProjectCards();
     });
   });
 
   function startObserver() {
     ensureStyles();
+    loadPiModelsIfNeeded();
     refreshAll();
     observer.observe(document.body, { childList: true, subtree: true });
   }
@@ -1683,16 +2369,22 @@
     history.pushState = origPushState;
     history.replaceState = origReplaceState;
     window.removeEventListener("popstate", checkUrlChange);
+    window.removeEventListener("keydown", onKeyDownCapture, true);
     document.removeEventListener("mousedown", onMouseDown, true);
     closeTagPopover();
     closeFileContextMenu();
+    closePiModelPopover();
   }
 
   function uninstall() {
     _cleanupForUpgrade();
     document.getElementById("agy-project-tags-bar")?.remove();
     document.getElementById("agy-project-files-panel")?.remove();
+    document.getElementById("agy-pi-engine-bar")?.remove();
+    document.getElementById("agy-pi-turns-container")?.remove();
     document.getElementById("agy-project-tags-style")?.remove();
+    const nativeModelBtn = document.querySelector('[data-testid="model-selector-trigger"]');
+    if (nativeModelBtn) nativeModelBtn.style.display = "";
     document.querySelectorAll(".agy-proj-badges, .agy-proj-tag-btn").forEach(el => el.remove());
     if (cachedRpp && cachedRpp._rawState && cachedRpp._origSetState) {
       cachedRpp._origSetState(cachedRpp._rawState);
@@ -1719,5 +2411,5 @@
   } else {
     startObserver();
   }
-  return "injected_v2_ok";
+  return "injected_v4_ok";
 })();
