@@ -1,12 +1,13 @@
 # Antigravity Sidebar Tags (`antigravity-sidebar-tags`)
 
-<p align="center">
-  <img src="./assets/preview.svg" alt="Antigravity Sidebar Tags Preview" width="840" />
+<p align="center">  
+  <img src="./assets/preview.svg" alt="Antigravity Sidebar Tags Preview" width="840" />  
 </p>
 
-<p align="center">
-  <strong>为 Google Antigravity 左侧项目栏增加「多标签分类导航 & 一键过滤」能力的轻量增强插件</strong><br/>
-  零修改 <code>app.asar</code> · 不破坏 macOS 应用签名 · 无需重启热注入 · 原生兼容虚拟滚动列表
+<p align="center">  
+  <strong>为 Google Antigravity 左侧项目栏增加「多标签分类导航 & 一键过滤」能力的轻量增强插件</strong>  
+  
+  零修改 <code>app.asar</code> · 不破坏 macOS 应用签名 · 无需重启热注入 · 原生兼容虚拟滚动列表  
 </p>
 
 ---
@@ -14,6 +15,7 @@
 ## 💡 为什么做这个工具？（痛点背景）
 
 当你在 **Google Antigravity** 中积累了二三十个甚至更多项目（例如同时包含 **硬件固件、包装设计、AI 视频、Web 前后端、算法脚本** 等不同领域的工程）时，原生左侧栏把所有项目平铺在同一个 `Projects` 列表里：
+
 - 找项目需要反复上下滚动或者记住项目名搜索；
 - 不同领域的项目混在一起，缺少按标签归类与一键聚焦视图。
 
@@ -31,6 +33,11 @@
 - 🪄 **随手打标交互**：
   - 点击项目标题右侧的 **彩色标签徽章**，或鼠标悬停在项目行上点击右侧的 **🏷️ 标签图标**，即可弹出标签勾选面板；
   - 在弹窗内支持**一键勾选/取消标签**、**输入名称并选色新建标签**、**删除旧标签**。
+- 📂 **当前项目 Files 文件浏览框（新增）**：
+  - 在左侧栏 `Projects` 列表下方内置可拖拽高度、可折叠的 **Files 文件树浏览框**，自动跟随当前正在聊天的对话或选中的项目切换目录；
+  - **单击文件夹**：展开/收起子目录；
+  - **双击文件**：直接调用 macOS / 系统默认关联程序打开该文件（如用 Preview 打开图片/PDF、Excel 打开表格、VS Code 打开代码等）；
+  - **右键菜单**：支持 **「在 Finder 中显示」**、**「用系统默认程序打开」**、**「复制完整路径 / 相对路径」**。
 - 💾 **三重持久化存储**：所有标签及绑定关系实时同步至本地文件 `~/.gemini/antigravity/project_tags.json`、`nativeStorage` 与 `localStorage`，客户端重启或升级版本均不会丢失。
 - 🔄 **后台无感守护**：通过 macOS `LaunchAgent`（或 Linux `systemd`）在后台轻量运行，打开新窗口或刷新页面时自动完成注入。
 
@@ -118,16 +125,14 @@ node bin/cli.js uninstall
 
 ## 🔍 技术实现原理（How It Works）
 
-1. **为什么不用解包 `app.asar`？**
+1. **为什么不用解包 `app.asar`？**  
    Antigravity 的 `Info.plist` 中包含 `ElectronAsarIntegrity` 哈希校验，直接改动 `app.asar` 会触发 macOS Gatekeeper / Electron 完整性保护导致进程闪退。但 Antigravity 主进程（`dist/main.js`）启动时默认附加了 `--remote-debugging-port=0`，并将随机分配的调试端口写入 `<userData>/DevToolsActivePort`：
    - **macOS**: `~/Library/Application Support/Antigravity/DevToolsActivePort`
    - **Linux**: `~/.config/Antigravity/DevToolsActivePort`
    - **Windows**: `%APPDATA%\Antigravity\DevToolsActivePort`
-
    本工具的守护进程（[`src/daemon.js`](./src/daemon.js)）读取该端口并通过本地 WebSocket 执行 `Page.addScriptToEvaluateOnNewDocument` 与 `Runtime.evaluate`，实现完全免改包的热注入。
-
-2. **为什么不用 CSS `display: none` 隐藏项目？**
-   Antigravity 左侧栏使用了 `@tanstack/react-virtual` 虚拟滚动列表（固定计算每个项目头 `36px`、每个子会话 `49px` 的绝对偏移量）。如果单纯用 DOM/CSS 隐藏不匹配的项目，会导致虚拟列表留下大片空白断层，且展开状态下的子对话依然会残留。
+2. **为什么不用 CSS `display: none` 隐藏项目？**  
+   Antigravity 左侧栏使用了 `@tanstack/react-virtual` 虚拟滚动列表（固定计算每个项目头 `36px`、每个子会话 `49px` 的绝对偏移量）。如果单纯用 DOM/CSS 隐藏不匹配的项目，会导致虚拟列表留下大片空白断层，且展开状态下的子对话依然会残留。  
    [`src/inject.js`](./src/inject.js) 通过 `[data-testid="conversation-list-sidebar"]` 节点的 `__reactFiber$` 向上回溯找到 `projectManagementFeature.richProjectsProvider`，在内存态对非当前标签的项目附加合成的 `_tagFiltered: true` 标记，并拦截 `updateProject` 防止触发任何真实的归档 RPC。这样 React 原生的 `fsb()` 与 `Asb()` Hooks 会自动完成项目及子对话的过滤，虚拟滚动高度也会被精准重算，体验与原生功能完全一致。
 
 ---

@@ -1,14 +1,7 @@
-/**
- * Antigravity Sidebar Tags - CDP Auto-Injector Daemon (daemon.js)
- *
- * Connects to Antigravity's built-in Chrome DevTools Protocol port
- * (`DevToolsActivePort`), injects `inject.js` into every open Antigravity
- * window without modifying `app.asar` or breaking code signing, and syncs
- * tag changes back to `~/.gemini/antigravity/project_tags.json`.
- */
 const fs = require("fs");
 const path = require("path");
 const os = require("os");
+const { execFile } = require("child_process");
 
 function getActivePortPaths() {
   const home = os.homedir();
@@ -55,6 +48,90 @@ function saveConfigJson(rawStr) {
   } catch (e) {
     console.error("[sidebar-tags] Failed to write project_tags.json:", e.message);
   }
+}
+
+function listDirectoryEntries(dirPath) {
+  const resolved = path.resolve(dirPath);
+  if (!fs.existsSync(resolved)) {
+    throw new Error(`Directory not found: ${resolved}`);
+  }
+  const dirents = fs.readdirSync(resolved, { withFileTypes: true });
+  const items = [];
+  for (const d of dirents) {
+    if (d.name === ".DS_Store" || d.name === ".git") continue;
+    const fullPath = path.join(resolved, d.name);
+    let isDir = d.isDirectory();
+    let size = 0;
+    try {
+      const st = fs.statSync(fullPath);
+      isDir = st.isDirectory();
+      size = st.size || 0;
+    } catch (e) {}
+    items.push({
+      name: d.name,
+      path: fullPath,
+      isDir,
+      size
+    });
+  }
+  items.sort((a, b) => {
+    if (a.isDir !== b.isDir) return a.isDir ? -1 : 1;
+    return a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: "base" });
+  });
+  return items;
+}
+
+function revealInFinder(targetPath) {
+  const resolved = path.resolve(targetPath);
+  if (process.platform === "darwin") {
+    execFile("open", ["-R", resolved]);
+  } else if (process.platform === "win32") {
+    execFile("explorer.exe", [`/select,${resolved}`]);
+  } else {
+    execFile("xdg-open", [path.dirname(resolved)]);
+  }
+  return { ok: true, path: resolved };
+}
+
+function openWithDefaultApp(targetPath) {
+  const resolved = path.resolve(targetPath);
+  if (process.platform === "darwin") {
+    execFile("open", [resolved]);
+  } else if (process.platform === "win32") {
+    execFile("cmd.exe", ["/c", "start", "", resolved]);
+  } else {
+    execFile("xdg-open", [resolved]);
+  }
+  return { ok: true, path: resolved };
+}
+
+function handleBridgeCall(send, rawPayload) {
+  let req;
+  try {
+    req = JSON.parse(rawPayload);
+  } catch (e) {
+    return;
+  }
+  const { reqId, cmd, args } = req || {};
+  if (!reqId) return;
+
+  let resObj = { ok: true, data: null };
+  try {
+    if (cmd === "listDir") {
+      resObj.data = listDirectoryEntries(args.dirPath);
+    } else if (cmd === "revealInFinder") {
+      resObj.data = revealInFinder(args.targetPath);
+    } else if (cmd === "openDefault") {
+      resObj.data = openWithDefaultApp(args.targetPath);
+    } else {
+      resObj = { ok: false, error: `Unknown command: ${cmd}` };
+    }
+  } catch (err) {
+    resObj = { ok: false, error: err.message || String(err) };
+  }
+
+  const expr = `window.__agyBridgeResolve && window.__agyBridgeResolve(${JSON.stringify(reqId)}, ${JSON.stringify(resObj)});`;
+  send("Runtime.evaluate", { expression: expr, returnByValue: true });
 }
 
 function buildPayloadScript() {
@@ -118,6 +195,7 @@ function attachToTarget(target) {
     send("Runtime.enable");
     send("Page.enable");
     send("Runtime.addBinding", { name: "__agySaveProjectTags" });
+    send("Runtime.addBinding", { name: "__agyBridgeCall" });
     send("Page.addScriptToEvaluateOnNewDocument", { source });
     send("Runtime.evaluate", { expression: source, returnByValue: true });
   };
@@ -125,8 +203,12 @@ function attachToTarget(target) {
   ws.onmessage = (event) => {
     try {
       const msg = JSON.parse(event.data);
-      if (msg.method === "Runtime.bindingCalled" && msg.params?.name === "__agySaveProjectTags") {
-        saveConfigJson(msg.params.payload);
+      if (msg.method === "Runtime.bindingCalled") {
+        if (msg.params?.name === "__agySaveProjectTags") {
+          saveConfigJson(msg.params.payload);
+        } else if (msg.params?.name === "__agyBridgeCall") {
+          handleBridgeCall(send, msg.params.payload);
+        }
       } else if (msg.method === "Page.loadEventFired") {
         const source = buildPayloadScript();
         send("Runtime.evaluate", { expression: source, returnByValue: true });
@@ -193,7 +275,7 @@ async function runOnce(mode = "inject") {
 }
 
 function startDaemon() {
-  console.log("[sidebar-tags] Starting Antigravity Sidebar Tags daemon...");
+  console.log("[sidebar-tags] Starting Antigravity Sidebar Tags & Files daemon...");
   console.log(`[sidebar-tags] Config file: ${TAGS_JSON_FILE}`);
   pollTargets();
   setInterval(pollTargets, 3000);

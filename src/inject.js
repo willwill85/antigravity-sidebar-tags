@@ -1,14 +1,7 @@
-/**
- * Antigravity Sidebar Tags - Frontend Injector (inject.js)
- *
- * Dynamically injects a tag navigation bar above the left sidebar project list,
- * adds colored tag badges & a tag assignment popover to each project card,
- * and hooks React's internal `richProjectsProvider` so filtering works natively
- * with `@tanstack/react-virtual` (zero blank gaps, hides non-matching projects
- * and their nested conversations cleanly).
- */
 (() => {
+  const INSTANCE_VERSION = 3;
   const STORAGE_KEY = "agy_project_tags_v1";
+  const FILES_PANEL_STATE_KEY = "agy_files_panel_state_v1";
   const PRESET_COLORS = [
     "#2563eb", // Blue
     "#db2777", // Pink
@@ -20,15 +13,66 @@
     "#4f46e5"  // Indigo
   ];
 
-  // If already running, allow hot-updating config and refreshing
+  // If already running with current version, just refresh
   if (window.__AGY_TAG_NAV_INSTANCE__) {
-    if (window.__AGY_INITIAL_PROJECT_TAGS__ && !localStorage.getItem(STORAGE_KEY)) {
-      window.__AGY_TAG_NAV_INSTANCE__.setConfig(window.__AGY_INITIAL_PROJECT_TAGS__);
+    if (window.__AGY_TAG_NAV_INSTANCE__.version === INSTANCE_VERSION) {
+      if (window.__AGY_INITIAL_PROJECT_TAGS__ && !localStorage.getItem(STORAGE_KEY)) {
+        window.__AGY_TAG_NAV_INSTANCE__.setConfig(window.__AGY_INITIAL_PROJECT_TAGS__);
+      }
+      window.__AGY_TAG_NAV_INSTANCE__.refreshAll();
+      return "already_active_refreshed_v2";
     }
-    window.__AGY_TAG_NAV_INSTANCE__.refreshAll();
-    return "already_active_refreshed";
+    // Upgrade from older version cleanly without resetting tag filter
+    try {
+      if (typeof window.__AGY_TAG_NAV_INSTANCE__._cleanupForUpgrade === "function") {
+        window.__AGY_TAG_NAV_INSTANCE__._cleanupForUpgrade();
+      } else if (typeof window.__AGY_TAG_NAV_INSTANCE__.uninstall === "function") {
+        window.__AGY_TAG_NAV_INSTANCE__.uninstall();
+      }
+    } catch (e) {}
+    delete window.__AGY_TAG_NAV_INSTANCE__;
   }
 
+  // --- Bridge RPC to Node Daemon ---
+  let bridgeReqSeq = 1;
+  const pendingBridgeCalls = new Map();
+
+  window.__agyBridgeResolve = function(reqId, resObj) {
+    const p = pendingBridgeCalls.get(reqId);
+    if (p) {
+      pendingBridgeCalls.delete(reqId);
+      clearTimeout(p.timer);
+      if (resObj && resObj.ok) {
+        p.resolve(resObj.data);
+      } else {
+        p.reject(new Error(resObj?.error || "Bridge call failed"));
+      }
+    }
+  };
+
+  function callBridge(cmd, args = {}) {
+    return new Promise((resolve, reject) => {
+      if (typeof window.__agyBridgeCall !== "function") {
+        reject(new Error("Daemon bridge (__agyBridgeCall) not connected"));
+        return;
+      }
+      const reqId = `req_${Date.now()}_${bridgeReqSeq++}`;
+      const timer = setTimeout(() => {
+        pendingBridgeCalls.delete(reqId);
+        reject(new Error("Bridge call timed out"));
+      }, 4000);
+      pendingBridgeCalls.set(reqId, { resolve, reject, timer });
+      try {
+        window.__agyBridgeCall(JSON.stringify({ reqId, cmd, args }));
+      } catch (e) {
+        clearTimeout(timer);
+        pendingBridgeCalls.delete(reqId);
+        reject(e);
+      }
+    });
+  }
+
+  // --- Config State ---
   function loadInitialConfig() {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
@@ -56,8 +100,29 @@
     };
   }
 
+  function loadFilesPanelState() {
+    try {
+      const raw = localStorage.getItem(FILES_PANEL_STATE_KEY);
+      if (raw) {
+        const p = JSON.parse(raw);
+        return {
+          height: Math.min(520, Math.max(110, Number(p.height) || 220)),
+          collapsed: Boolean(p.collapsed)
+        };
+      }
+    } catch (e) {}
+    return { height: 220, collapsed: false };
+  }
+
   let state = loadInitialConfig();
   if (!state.activeTag) state.activeTag = "all";
+  let filesPanelPrefs = loadFilesPanelState();
+
+  function saveFilesPanelPrefs() {
+    try {
+      localStorage.setItem(FILES_PANEL_STATE_KEY, JSON.stringify(filesPanelPrefs));
+    } catch (e) {}
+  }
 
   function saveState() {
     const json = JSON.stringify(state);
@@ -76,6 +141,7 @@
     } catch (e) {}
   }
 
+  // --- Styles ---
   function ensureStyles() {
     let styleEl = document.getElementById("agy-project-tags-style");
     if (!styleEl) {
@@ -178,12 +244,10 @@
         opacity: 1;
         background: rgba(128, 128, 128, 0.15);
       }
-      #agy-tag-popover {
+      #agy-tag-popover, #agy-file-ctx-menu {
         position: fixed;
         z-index: 99999;
-        width: 236px;
         border-radius: 10px;
-        padding: 10px;
         background: var(--popover, #ffffff);
         color: var(--popover-foreground, #111827);
         border: 1px solid rgba(128, 128, 128, 0.24);
@@ -191,7 +255,16 @@
         font-size: 12px;
         user-select: none;
       }
-      html[style*="dark"] #agy-tag-popover {
+      #agy-tag-popover {
+        width: 236px;
+        padding: 10px;
+      }
+      #agy-file-ctx-menu {
+        min-width: 188px;
+        padding: 5px;
+      }
+      html[style*="dark"] #agy-tag-popover,
+      html[style*="dark"] #agy-file-ctx-menu {
         background: #1e1f23;
         color: #f3f4f6;
         border-color: rgba(255, 255, 255, 0.14);
@@ -317,31 +390,241 @@
         border-color: currentColor;
         transform: scale(1.15);
       }
+
+      /* --- Project Files Browser Panel --- */
+      #agy-project-files-panel {
+        display: flex;
+        flex-direction: column;
+        flex-shrink: 0;
+        margin: 0 8px 4px 8px;
+        border-radius: 8px;
+        border: 1px solid rgba(128, 128, 128, 0.18);
+        background: rgba(128, 128, 128, 0.04);
+        overflow: hidden;
+        user-select: none;
+      }
+      #agy-files-resizer {
+        height: 5px;
+        cursor: ns-resize;
+        width: 100%;
+        flex-shrink: 0;
+        background: transparent;
+        transition: background 0.12s ease;
+      }
+      #agy-files-resizer:hover, #agy-files-resizer.dragging {
+        background: rgba(37, 99, 235, 0.35);
+      }
+      .agy-files-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 4px 8px 5px 8px;
+        border-bottom: 1px solid rgba(128, 128, 128, 0.12);
+        font-size: 11.5px;
+        font-weight: 600;
+        gap: 6px;
+        flex-shrink: 0;
+      }
+      #agy-project-files-panel.collapsed .agy-files-header {
+        border-bottom: none;
+      }
+      .agy-files-header-left {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        min-width: 0;
+        flex: 1;
+        cursor: pointer;
+      }
+      .agy-files-proj-badge {
+        display: inline-block;
+        padding: 1px 6px;
+        border-radius: 4px;
+        font-size: 10.5px;
+        font-weight: 500;
+        background: rgba(37, 99, 235, 0.12);
+        color: #2563eb;
+        max-width: 140px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      html[style*="dark"] .agy-files-proj-badge {
+        background: rgba(59, 130, 246, 0.2);
+        color: #60a5fa;
+      }
+      .agy-files-actions {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        flex-shrink: 0;
+      }
+      .agy-files-icon-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 22px;
+        height: 22px;
+        border-radius: 5px;
+        border: none;
+        background: transparent;
+        color: inherit;
+        opacity: 0.65;
+        cursor: pointer;
+        padding: 0;
+        font-size: 12px;
+      }
+      .agy-files-icon-btn:hover {
+        opacity: 1;
+        background: rgba(128, 128, 128, 0.15);
+      }
+      #agy-files-tree {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding: 4px 4px;
+        font-size: 12px;
+      }
+      #agy-project-files-panel.collapsed #agy-files-tree,
+      #agy-project-files-panel.collapsed #agy-files-resizer {
+        display: none;
+      }
+      .agy-file-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        height: 24px;
+        padding-right: 6px;
+        border-radius: 5px;
+        cursor: pointer;
+        color: inherit;
+        transition: background 0.08s ease;
+        white-space: nowrap;
+      }
+      .agy-file-row:hover {
+        background: rgba(128, 128, 128, 0.11);
+      }
+      .agy-file-row.selected {
+        background: rgba(37, 99, 235, 0.15);
+        color: #2563eb;
+        font-weight: 500;
+      }
+      html[style*="dark"] .agy-file-row.selected {
+        background: rgba(59, 130, 246, 0.24);
+        color: #93c5fd;
+      }
+      .agy-file-row-left {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        min-width: 0;
+        flex: 1;
+        overflow: hidden;
+      }
+      .agy-file-caret {
+        width: 12px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 9px;
+        opacity: 0.6;
+        flex-shrink: 0;
+      }
+      .agy-file-icon {
+        font-size: 12.5px;
+        line-height: 1;
+        flex-shrink: 0;
+      }
+      .agy-file-name {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 12px;
+      }
+      .agy-file-meta {
+        font-size: 10px;
+        opacity: 0.48;
+        margin-left: 6px;
+        flex-shrink: 0;
+        font-variant-numeric: tabular-nums;
+      }
+      .agy-file-opened-pill {
+        font-size: 9.5px;
+        padding: 1px 5px;
+        border-radius: 4px;
+        background: rgba(5, 150, 105, 0.16);
+        color: #059669;
+        font-weight: 600;
+        margin-left: 4px;
+        flex-shrink: 0;
+      }
+      .agy-files-empty {
+        padding: 14px 10px;
+        text-align: center;
+        font-size: 11.5px;
+        opacity: 0.55;
+      }
+      .agy-ctx-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 9px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 12px;
+        transition: background 0.1s ease;
+      }
+      .agy-ctx-item:hover {
+        background: rgba(37, 99, 235, 0.12);
+        color: #2563eb;
+      }
+      html[style*="dark"] .agy-ctx-item:hover {
+        background: rgba(59, 130, 246, 0.22);
+        color: #93c5fd;
+      }
+      .agy-ctx-sep {
+        height: 1px;
+        margin: 4px 4px;
+        background: rgba(128, 128, 128, 0.16);
+      }
     `;
   }
 
+  // --- React Providers Hook ---
   let cachedPmf = null;
   let cachedRpp = null;
+  let cachedSsp = null;
+  let cachedEnf = null;
 
   function findReactProviders() {
-    if (cachedRpp && cachedPmf) return { pmf: cachedPmf, rpp: cachedRpp };
     const el = document.querySelector('[data-testid="conversation-list-sidebar"]');
     if (!el) return null;
+    if (cachedRpp && cachedPmf && cachedSsp) {
+      return { pmf: cachedPmf, rpp: cachedRpp, ssp: cachedSsp, enf: cachedEnf };
+    }
     const fiberKey = Object.keys(el).find(k => k.startsWith("__reactFiber$"));
     if (!fiberKey) return null;
     let cur = el[fiberKey];
     while (cur) {
       const v = cur.memoizedProps?.value;
-      if (v?.projectManagementFeature?.richProjectsProvider) {
-        cachedPmf = v.projectManagementFeature;
-        cachedRpp = cachedPmf.richProjectsProvider;
-        break;
+      if (v) {
+        if (v.projectManagementFeature?.richProjectsProvider) {
+          cachedPmf = v.projectManagementFeature;
+          cachedRpp = cachedPmf.richProjectsProvider;
+        }
+        if (v.sidebarSectionsProvider) {
+          cachedSsp = v.sidebarSectionsProvider;
+        }
+        if (v.electronNativeFeature) {
+          cachedEnf = v.electronNativeFeature;
+        }
       }
       cur = cur.return;
     }
     if (!cachedRpp) return null;
     hookRichProjectsProvider(cachedPmf, cachedRpp);
-    return { pmf: cachedPmf, rpp: cachedRpp };
+    return { pmf: cachedPmf, rpp: cachedRpp, ssp: cachedSsp, enf: cachedEnf };
   }
 
   function doesProjectMatchTag(projectId, activeTag) {
@@ -377,7 +660,6 @@
         applyTagFilterToRpp(rpp);
       };
 
-      // Guard updateProject so synthetic archived state is never sent as unarchive RPC
       if (pmf && typeof pmf.updateProject === "function" && !pmf.__agyUpdateGuarded) {
         pmf.__agyUpdateGuarded = true;
         const origUpdate = pmf.updateProject.bind(pmf);
@@ -425,6 +707,36 @@
     rpp._origSetState(filteredMap);
   }
 
+  function fileUriToPath(uri) {
+    if (!uri || typeof uri !== "string") return null;
+    try {
+      if (uri.startsWith("file://")) {
+        const u = new URL(uri);
+        let p = decodeURIComponent(u.pathname);
+        if (/^\/[A-Za-z]:\//.test(p)) {
+          p = p.slice(1);
+        }
+        return p;
+      }
+      return uri;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function extractProjectFolderUri(projObj) {
+    const resources = projObj?.projectResources?.resources || [];
+    for (const r of resources) {
+      if (r?.type?.case === "folderUri" && r.type.value) {
+        return r.type.value;
+      }
+      if (r?.type?.case === "gitFolder" && r.type.value?.folderUri) {
+        return r.type.value.folderUri;
+      }
+    }
+    return null;
+  }
+
   function getActiveProjectsList() {
     const found = findReactProviders();
     if (!found || !found.rpp._rawState) return [];
@@ -432,11 +744,497 @@
     for (const [k, v] of found.rpp._rawState.entries()) {
       const orig = v._origItem || v;
       if (k === "outside-of-project" || orig.project?.archived) continue;
-      list.push({ id: k, name: orig.project?.name || k });
+      const uri = extractProjectFolderUri(orig.project);
+      list.push({
+        id: k,
+        name: orig.project?.name || k,
+        folderUri: uri,
+        folderPath: fileUriToPath(uri)
+      });
     }
     return list;
   }
 
+  // --- Active Project Detection for Files Panel ---
+  let manualSelectedProjectId = null;
+
+  function detectCurrentActiveProject() {
+    const found = findReactProviders();
+    if (!found || !found.rpp._rawState) return null;
+    const rawMap = found.rpp._rawState;
+
+    const getProjectById = (pid) => {
+      if (!pid || !rawMap.has(pid)) return null;
+      const orig = rawMap.get(pid)._origItem || rawMap.get(pid);
+      if (!orig?.project) return null;
+      const uri = extractProjectFolderUri(orig.project);
+      const folderPath = fileUriToPath(uri);
+      if (!folderPath) return null;
+      return {
+        id: pid,
+        name: orig.project.name || pid,
+        folderUri: uri,
+        folderPath
+      };
+    };
+
+    // 1. Check ?section=<projectId> in URL
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const sec = params.get("section");
+      const bySec = getProjectById(sec);
+      if (bySec) return bySec;
+    } catch (e) {}
+
+    // 2. Check /p/<projectId> in pathname
+    const pMatch = window.location.pathname.match(/^\/p\/([^/?#]+)/);
+    if (pMatch) {
+      const byP = getProjectById(pMatch[1]);
+      if (byP) return byP;
+    }
+
+    // 3. Check /c/<conversationId> in pathname via sidebarSectionsProvider
+    const cMatch = window.location.pathname.match(/^\/c\/([^/?#]+)/);
+    if (cMatch && found.ssp) {
+      const convId = cMatch[1];
+      if (found.ssp.conversationsByProject instanceof Map) {
+        for (const [pid, convList] of found.ssp.conversationsByProject.entries()) {
+          if (Array.isArray(convList) && convList.some(c => c.cascadeId === convId || c.conversation?.conversationId === convId)) {
+            const byConvProj = getProjectById(pid);
+            if (byConvProj) return byConvProj;
+            const matchedConv = convList.find(c => c.cascadeId === convId || c.conversation?.conversationId === convId);
+            if (matchedConv?.workspaceUriStr) {
+              const fp = fileUriToPath(matchedConv.workspaceUriStr);
+              if (fp) {
+                return {
+                  id: pid,
+                  name: fp.split("/").filter(Boolean).pop() || "Workspace",
+                  folderUri: matchedConv.workspaceUriStr,
+                  folderPath: fp
+                };
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // 4. Fallback to manually clicked project in sidebar
+    if (manualSelectedProjectId) {
+      const byManual = getProjectById(manualSelectedProjectId);
+      if (byManual) return byManual;
+    }
+
+    // 5. Fallback to first active project
+    const allProjs = getActiveProjectsList();
+    return allProjs.find(p => p.folderPath) || null;
+  }
+
+  // --- Project Files Browser State & Rendering ---
+  let currentFilesProject = null; // { id, name, folderPath }
+  const expandedDirs = new Set(); // full directory paths that are expanded
+  const dirEntriesCache = new Map(); // dirPath -> Array<{ name, path, isDir, size }>
+  let selectedFilePath = null;
+  let recentlyOpenedPath = null;
+
+  function formatFileSize(bytes) {
+    if (!bytes || bytes <= 0) return "";
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(bytes < 10240 ? 1 : 0)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  }
+
+  function getFileIcon(name, isDir, isExpanded) {
+    if (isDir) return isExpanded ? "📂" : "📁";
+    const ext = (name.split(".").pop() || "").toLowerCase();
+    if (["js", "jsx", "ts", "tsx", "py", "c", "cpp", "h", "rs", "go", "java", "sh", "zsh"].includes(ext)) return "📄";
+    if (["json", "yaml", "yml", "toml", "ini", "env", "plist", "xml"].includes(ext)) return "⚙️";
+    if (["md", "txt", "rtf", "log"].includes(ext)) return "📝";
+    if (["png", "jpg", "jpeg", "gif", "svg", "webp", "ico"].includes(ext)) return "🖼️";
+    if (["pdf"].includes(ext)) return "📕";
+    if (["csv", "xlsx", "xls", "parquet", "db", "sqlite"].includes(ext)) return "📊";
+    if (["mp3", "wav", "mp4", "mov", "mkv"].includes(ext)) return "🎬";
+    if (["zip", "tar", "gz", "7z", "rar", "dmg"].includes(ext)) return "📦";
+    if (["html", "css", "scss"].includes(ext)) return "🌐";
+    return "📄";
+  }
+
+  async function loadDirEntries(dirPath, forceRefresh = false) {
+    if (!forceRefresh && dirEntriesCache.has(dirPath)) {
+      return dirEntriesCache.get(dirPath);
+    }
+    try {
+      const entries = await callBridge("listDir", { dirPath });
+      dirEntriesCache.set(dirPath, entries || []);
+      return entries || [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  async function refreshProjectFiles(forceReload = false) {
+    const activeProj = detectCurrentActiveProject();
+    const projectChanged =
+      !currentFilesProject ||
+      !activeProj ||
+      currentFilesProject.id !== activeProj.id ||
+      currentFilesProject.folderPath !== activeProj.folderPath;
+
+    if (projectChanged) {
+      currentFilesProject = activeProj;
+      if (forceReload) {
+        dirEntriesCache.clear();
+      }
+    } else if (forceReload) {
+      dirEntriesCache.clear();
+    }
+
+    ensureFilesPanelDom();
+    await renderFilesTree(projectChanged || forceReload);
+  }
+
+  function ensureFilesPanelDom() {
+    const listEl = document.querySelector('[data-testid="conversation-list-sidebar"]');
+    if (!listEl) return null;
+    const p2 = listEl.parentElement?.parentElement; // flex-1 min-h-0 overflow-y-auto
+    const p3 = p2?.parentElement; // h-full w-full flex flex-col pb-2 bg-sidebar
+    if (!p2 || !p3) return null;
+
+    let panel = document.getElementById("agy-project-files-panel");
+    if (!panel) {
+      panel = document.createElement("div");
+      panel.id = "agy-project-files-panel";
+      if (filesPanelPrefs.collapsed) {
+        panel.classList.add("collapsed");
+      } else {
+        panel.style.height = `${filesPanelPrefs.height}px`;
+      }
+
+      // Top drag resizer
+      const resizer = document.createElement("div");
+      resizer.id = "agy-files-resizer";
+      resizer.title = "上下拖动调整 Files 窗口高度";
+      resizer.onmousedown = (e) => {
+        e.preventDefault();
+        resizer.classList.add("dragging");
+        const startY = e.clientY;
+        const startH = panel.getBoundingClientRect().height;
+        const onMove = (me) => {
+          const delta = startY - me.clientY;
+          const nextH = Math.min(520, Math.max(110, startH + delta));
+          filesPanelPrefs.height = Math.round(nextH);
+          panel.style.height = `${filesPanelPrefs.height}px`;
+        };
+        const onUp = () => {
+          resizer.classList.remove("dragging");
+          saveFilesPanelPrefs();
+          window.removeEventListener("mousemove", onMove, true);
+          window.removeEventListener("mouseup", onUp, true);
+        };
+        window.addEventListener("mousemove", onMove, true);
+        window.addEventListener("mouseup", onUp, true);
+      };
+      panel.appendChild(resizer);
+
+      // Header
+      const header = document.createElement("div");
+      header.className = "agy-files-header";
+
+      const headerLeft = document.createElement("div");
+      headerLeft.className = "agy-files-header-left";
+      headerLeft.title = "点击折叠/展开项目文件浏览框";
+      headerLeft.onclick = () => toggleFilesPanelCollapse();
+
+      const caretEl = document.createElement("span");
+      caretEl.id = "agy-files-collapse-caret";
+      caretEl.textContent = filesPanelPrefs.collapsed ? "▸" : "▾";
+
+      const labelEl = document.createElement("span");
+      labelEl.textContent = "Files";
+
+      const projBadge = document.createElement("span");
+      projBadge.id = "agy-files-proj-badge";
+      projBadge.className = "agy-files-proj-badge";
+      projBadge.textContent = currentFilesProject?.name || "未选择项目";
+
+      headerLeft.appendChild(caretEl);
+      headerLeft.appendChild(labelEl);
+      headerLeft.appendChild(projBadge);
+
+      const actions = document.createElement("div");
+      actions.className = "agy-files-actions";
+
+      // Reveal root in Finder button
+      const finderBtn = document.createElement("button");
+      finderBtn.type = "button";
+      finderBtn.className = "agy-files-icon-btn";
+      finderBtn.title = "在 Finder 中打开当前项目文件夹";
+      finderBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>`;
+      finderBtn.onclick = (e) => {
+        e.stopPropagation();
+        if (currentFilesProject?.folderPath) {
+          triggerRevealInFinder(currentFilesProject.folderPath);
+        }
+      };
+
+      // Refresh button
+      const refreshBtn = document.createElement("button");
+      refreshBtn.type = "button";
+      refreshBtn.className = "agy-files-icon-btn";
+      refreshBtn.title = "刷新文件列表";
+      refreshBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>`;
+      refreshBtn.onclick = (e) => {
+        e.stopPropagation();
+        refreshProjectFiles(true);
+      };
+
+      actions.appendChild(finderBtn);
+      actions.appendChild(refreshBtn);
+
+      header.appendChild(headerLeft);
+      header.appendChild(actions);
+      panel.appendChild(header);
+
+      // Tree body
+      const tree = document.createElement("div");
+      tree.id = "agy-files-tree";
+      panel.appendChild(tree);
+
+      // Insert right after p2 inside p3
+      if (p2.nextSibling) {
+        p3.insertBefore(panel, p2.nextSibling);
+      } else {
+        p3.appendChild(panel);
+      }
+    }
+
+    const badge = document.getElementById("agy-files-proj-badge");
+    if (badge) {
+      badge.textContent = currentFilesProject?.name || "未选择项目";
+      badge.title = currentFilesProject?.folderPath || "";
+    }
+    return panel;
+  }
+
+  function toggleFilesPanelCollapse() {
+    const panel = document.getElementById("agy-project-files-panel");
+    if (!panel) return;
+    filesPanelPrefs.collapsed = !filesPanelPrefs.collapsed;
+    const caret = document.getElementById("agy-files-collapse-caret");
+    if (filesPanelPrefs.collapsed) {
+      panel.classList.add("collapsed");
+      panel.style.height = "auto";
+      if (caret) caret.textContent = "▸";
+    } else {
+      panel.classList.remove("collapsed");
+      panel.style.height = `${filesPanelPrefs.height}px`;
+      if (caret) caret.textContent = "▾";
+      renderFilesTree(false);
+    }
+    saveFilesPanelPrefs();
+  }
+
+  async function renderFilesTree(forceFetchRoot = false) {
+    const treeEl = document.getElementById("agy-files-tree");
+    if (!treeEl || filesPanelPrefs.collapsed) return;
+
+    if (!currentFilesProject || !currentFilesProject.folderPath) {
+      treeEl.innerHTML = `<div class="agy-files-empty">暂无打开的项目目录</div>`;
+      return;
+    }
+
+    const rootPath = currentFilesProject.folderPath;
+    const rootEntries = await loadDirEntries(rootPath, forceFetchRoot);
+    if (!rootEntries || rootEntries.length === 0) {
+      treeEl.innerHTML = `<div class="agy-files-empty">文件夹为空或无法读取</div>`;
+      return;
+    }
+
+    const fragment = document.createDocumentFragment();
+
+    async function appendEntries(entries, depth) {
+      for (const item of entries) {
+        const isExpanded = item.isDir && expandedDirs.has(item.path);
+        const row = document.createElement("div");
+        row.className = "agy-file-row" + (selectedFilePath === item.path ? " selected" : "");
+        row.style.paddingLeft = `${6 + depth * 14}px`;
+        row.title = `${item.path}\n• 单击：选中${item.isDir ? "/展开" : ""}\n• 双击：用系统默认程序打开\n• 右键：在 Finder 中显示 / 更多操作`;
+
+        const left = document.createElement("div");
+        left.className = "agy-file-row-left";
+
+        const caret = document.createElement("span");
+        caret.className = "agy-file-caret";
+        caret.textContent = item.isDir ? (isExpanded ? "▾" : "▸") : "";
+
+        const icon = document.createElement("span");
+        icon.className = "agy-file-icon";
+        icon.textContent = getFileIcon(item.name, item.isDir, isExpanded);
+
+        const nameSpan = document.createElement("span");
+        nameSpan.className = "agy-file-name";
+        nameSpan.textContent = item.name;
+
+        left.appendChild(caret);
+        left.appendChild(icon);
+        left.appendChild(nameSpan);
+        row.appendChild(left);
+
+        if (recentlyOpenedPath === item.path) {
+          const pill = document.createElement("span");
+          pill.className = "agy-file-opened-pill";
+          pill.textContent = "已打开";
+          row.appendChild(pill);
+        } else if (!item.isDir && item.size > 0) {
+          const meta = document.createElement("span");
+          meta.className = "agy-file-meta";
+          meta.textContent = formatFileSize(item.size);
+          row.appendChild(meta);
+        }
+
+        // Single click: select row; if folder, toggle expand
+        row.onclick = async (e) => {
+          e.stopPropagation();
+          selectedFilePath = item.path;
+          if (item.isDir) {
+            if (expandedDirs.has(item.path)) {
+              expandedDirs.delete(item.path);
+            } else {
+              expandedDirs.add(item.path);
+              await loadDirEntries(item.path, false);
+            }
+          }
+          renderFilesTree(false);
+        };
+
+        // Double click: open with system default app (for files) or open in Finder
+        row.ondblclick = (e) => {
+          e.stopPropagation();
+          e.preventDefault();
+          selectedFilePath = item.path;
+          if (!item.isDir) {
+            triggerOpenWithDefaultApp(item.path);
+          }
+        };
+
+        // Right click: open context menu (Reveal in Finder / Open with Default App / Copy Path)
+        row.oncontextmenu = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          selectedFilePath = item.path;
+          renderFilesTree(false);
+          openFileContextMenu(item, e.clientX, e.clientY);
+        };
+
+        fragment.appendChild(row);
+
+        if (isExpanded) {
+          const subEntries = await loadDirEntries(item.path, false);
+          await appendEntries(subEntries, depth + 1);
+        }
+      }
+    }
+
+    await appendEntries(rootEntries, 0);
+    treeEl.innerHTML = "";
+    treeEl.appendChild(fragment);
+  }
+
+  async function triggerRevealInFinder(targetPath) {
+    try {
+      await callBridge("revealInFinder", { targetPath });
+    } catch (e) {
+      // Fallback to electronNativeFeature.revealInFilePicker if available
+      const found = findReactProviders();
+      if (found?.enf?.revealInFilePicker) {
+        found.enf.revealInFilePicker(`file://${encodeURI(targetPath)}`);
+      }
+    }
+  }
+
+  async function triggerOpenWithDefaultApp(targetPath) {
+    try {
+      await callBridge("openDefault", { targetPath });
+      recentlyOpenedPath = targetPath;
+      renderFilesTree(false);
+      setTimeout(() => {
+        if (recentlyOpenedPath === targetPath) {
+          recentlyOpenedPath = null;
+          renderFilesTree(false);
+        }
+      }, 1500);
+    } catch (e) {}
+  }
+
+  function closeFileContextMenu() {
+    const existing = document.getElementById("agy-file-ctx-menu");
+    if (existing) existing.remove();
+  }
+
+  function openFileContextMenu(item, clientX, clientY) {
+    closeFileContextMenu();
+    closeTagPopover();
+
+    const menu = document.createElement("div");
+    menu.id = "agy-file-ctx-menu";
+    document.body.appendChild(menu);
+
+    const actions = [
+      {
+        icon: "📂",
+        label: "在 Finder 中显示",
+        onClick: () => triggerRevealInFinder(item.path)
+      },
+      {
+        icon: "🚀",
+        label: "用系统默认程序打开",
+        onClick: () => triggerOpenWithDefaultApp(item.path)
+      },
+      { sep: true },
+      {
+        icon: "📋",
+        label: "复制完整路径",
+        onClick: () => navigator.clipboard?.writeText(item.path)
+      },
+      {
+        icon: "📄",
+        label: "复制相对路径",
+        onClick: () => {
+          const root = currentFilesProject?.folderPath || "";
+          const rel = item.path.startsWith(root + "/")
+            ? item.path.slice(root.length + 1)
+            : item.name;
+          navigator.clipboard?.writeText(rel);
+        }
+      }
+    ];
+
+    actions.forEach(act => {
+      if (act.sep) {
+        const sep = document.createElement("div");
+        sep.className = "agy-ctx-sep";
+        menu.appendChild(sep);
+        return;
+      }
+      const el = document.createElement("div");
+      el.className = "agy-ctx-item";
+      el.innerHTML = `<span>${act.icon}</span><span>${escapeHtml(act.label)}</span>`;
+      el.onclick = (e) => {
+        e.stopPropagation();
+        closeFileContextMenu();
+        act.onClick();
+      };
+      menu.appendChild(el);
+    });
+
+    const rect = menu.getBoundingClientRect();
+    const top = Math.min(window.innerHeight - rect.height - 8, Math.max(8, clientY));
+    const left = Math.min(window.innerWidth - rect.width - 8, Math.max(8, clientX));
+    menu.style.top = `${top}px`;
+    menu.style.left = `${left}px`;
+  }
+
+  // --- Tag Bar & Project Badges ---
   function hexToRgba(hex, alpha) {
     const clean = (hex || "#2563eb").replace("#", "");
     const r = parseInt(clean.substring(0, 2), 16) || 37;
@@ -580,6 +1378,14 @@
       const projectName = cardBtn.getAttribute("data-project-label") || projectId;
       const assignedIds = (state.projectTags[projectId] || []).filter(id => tagMap.has(id));
 
+      if (!cardBtn.__agyClickHooked) {
+        cardBtn.__agyClickHooked = true;
+        cardBtn.addEventListener("click", () => {
+          manualSelectedProjectId = projectId;
+          setTimeout(() => refreshProjectFiles(false), 60);
+        });
+      }
+
       // 1. Render badges next to project title
       const titleRow = cardBtn.querySelector(".truncate.text-sm")?.parentElement;
       if (titleRow) {
@@ -644,6 +1450,7 @@
 
   function openTagPopover(projectId, projectName, anchorEl) {
     closeTagPopover();
+    closeFileContextMenu();
     const pop = document.createElement("div");
     pop.id = "agy-tag-popover";
     document.body.appendChild(pop);
@@ -806,8 +1613,35 @@
     if (pop && !pop.contains(e.target) && !e.target.closest(".agy-proj-badge") && !e.target.closest(".agy-proj-tag-btn")) {
       closeTagPopover();
     }
+    const ctx = document.getElementById("agy-file-ctx-menu");
+    if (ctx && !ctx.contains(e.target)) {
+      closeFileContextMenu();
+    }
   };
   document.addEventListener("mousedown", onMouseDown, true);
+
+  let lastHref = window.location.href;
+
+  function checkUrlChange() {
+    if (window.location.href !== lastHref) {
+      lastHref = window.location.href;
+      refreshProjectFiles(false);
+    }
+  }
+
+  const origPushState = history.pushState;
+  const origReplaceState = history.replaceState;
+  history.pushState = function(...args) {
+    const res = origPushState.apply(this, args);
+    setTimeout(checkUrlChange, 20);
+    return res;
+  };
+  history.replaceState = function(...args) {
+    const res = origReplaceState.apply(this, args);
+    setTimeout(checkUrlChange, 20);
+    return res;
+  };
+  window.addEventListener("popstate", checkUrlChange);
 
   function refreshAll() {
     ensureStyles();
@@ -817,6 +1651,7 @@
     }
     renderTagBar();
     decorateProjectCards();
+    refreshProjectFiles(false);
   }
 
   let rafPending = false;
@@ -828,6 +1663,11 @@
       if (!document.getElementById("agy-project-tags-bar")) {
         renderTagBar();
       }
+      if (!document.getElementById("agy-project-files-panel")) {
+        refreshProjectFiles(false);
+      } else {
+        checkUrlChange();
+      }
       decorateProjectCards();
     });
   });
@@ -838,11 +1678,20 @@
     observer.observe(document.body, { childList: true, subtree: true });
   }
 
-  function uninstall() {
+  function _cleanupForUpgrade() {
     observer.disconnect();
+    history.pushState = origPushState;
+    history.replaceState = origReplaceState;
+    window.removeEventListener("popstate", checkUrlChange);
     document.removeEventListener("mousedown", onMouseDown, true);
     closeTagPopover();
+    closeFileContextMenu();
+  }
+
+  function uninstall() {
+    _cleanupForUpgrade();
     document.getElementById("agy-project-tags-bar")?.remove();
+    document.getElementById("agy-project-files-panel")?.remove();
     document.getElementById("agy-project-tags-style")?.remove();
     document.querySelectorAll(".agy-proj-badges, .agy-proj-tag-btn").forEach(el => el.remove());
     if (cachedRpp && cachedRpp._rawState && cachedRpp._origSetState) {
@@ -852,8 +1701,11 @@
   }
 
   window.__AGY_TAG_NAV_INSTANCE__ = {
+    version: INSTANCE_VERSION,
     refreshAll,
+    refreshProjectFiles,
     uninstall,
+    _cleanupForUpgrade,
     setConfig(newCfg) {
       state = newCfg;
       saveState();
@@ -867,5 +1719,5 @@
   } else {
     startObserver();
   }
-  return "injected_ok";
+  return "injected_v2_ok";
 })();
