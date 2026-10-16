@@ -1,5 +1,5 @@
 (() => {
-  const INSTANCE_VERSION = 5;
+  const INSTANCE_VERSION = 6;
   const STORAGE_KEY = "agy_project_tags_v1";
   const FILES_PANEL_STATE_KEY = "agy_files_panel_state_v1";
   const PI_ENGINE_STATE_KEY = "agy_pi_engine_state_v1";
@@ -14,13 +14,27 @@
     "#4f46e5"  // Indigo
   ];
 
+  // Clean monochrome SVG icons matching Antigravity's Material Symbols / Lucide aesthetic
+  const SVG_ICONS = {
+    chevronRight: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 -960 960 960" fill="currentColor" class="shrink-0 transition-transform duration-150"><path d="M517.85-480l-184-184L376-706.15L602.15-480L376-253.85L333.85-296l184-184Z"></path></svg>`,
+    folderFallback: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 -960 960 960" fill="currentColor" class="shrink-0 text-muted-foreground"><path d="M170-180q-29.15,0-49.58-20.42T100-250V-707.69q0-29.15 21.58-50.73T172.31-780H391.92l80,80H787.69q26.85,0 46.31,17.35T856.54-640H447.38l-80-80H172.31q-5.39,0-8.85,3.46T160-707.69v455.38q0,4.23 2.12,6.92t5.58,4.62L261-552.31H927.31L830.46-229.69q-6.85,22.54-25.65,36.11T763.08-180H170Zm60.54-60H770.77l75.46-252.31H306L230.54-240Zm0,0L306-492.31L230.54-240ZM160-640v-67.69q0-5.39 0-8.85t0-3.46v80Z"></path></svg>`,
+    fileFallback: `<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 text-muted-foreground"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>`,
+    finderOpen: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>`,
+    refresh: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>`,
+    moreHorizontal: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>`,
+    externalLink: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>`,
+    download: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>`,
+    copy: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`,
+    tag: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>`
+  };
+
   if (window.__AGY_TAG_NAV_INSTANCE__) {
     if (window.__AGY_TAG_NAV_INSTANCE__.version === INSTANCE_VERSION) {
       if (window.__AGY_INITIAL_PROJECT_TAGS__ && !localStorage.getItem(STORAGE_KEY)) {
         window.__AGY_TAG_NAV_INSTANCE__.setConfig(window.__AGY_INITIAL_PROJECT_TAGS__);
       }
       window.__AGY_TAG_NAV_INSTANCE__.refreshAll();
-      return "already_active_refreshed_v4";
+      return "already_active_refreshed_v6";
     }
     try {
       if (typeof window.__AGY_TAG_NAV_INSTANCE__._cleanupForUpgrade === "function") {
@@ -32,9 +46,10 @@
     delete window.__AGY_TAG_NAV_INSTANCE__;
   }
 
-  // --- Bridge RPC to Node Daemon ---
+  // --- Dual-Transport Bridge (CDP on Desktop + HTTP/SSE on Web) ---
   let bridgeReqSeq = 1;
   const pendingBridgeCalls = new Map();
+  let webEventSource = null;
 
   window.__agyBridgeResolve = function(reqId, resObj) {
     const p = pendingBridgeCalls.get(reqId);
@@ -49,30 +64,67 @@
     }
   };
 
+  function isWebMode() {
+    return Boolean(window.__AGY_IS_WEB__) || typeof window.__agyBridgeCall !== "function";
+  }
+
   function callBridge(cmd, args = {}) {
-    return new Promise((resolve, reject) => {
-      if (typeof window.__agyBridgeCall !== "function") {
-        reject(new Error("Daemon bridge (__agyBridgeCall) not connected"));
-        return;
-      }
-      const reqId = `req_${Date.now()}_${bridgeReqSeq++}`;
-      const timer = setTimeout(() => {
-        pendingBridgeCalls.delete(reqId);
-        reject(new Error("Bridge call timed out"));
-      }, 6000);
-      pendingBridgeCalls.set(reqId, { resolve, reject, timer });
-      try {
-        window.__agyBridgeCall(JSON.stringify({ reqId, cmd, args }));
-      } catch (e) {
-        clearTimeout(timer);
-        pendingBridgeCalls.delete(reqId);
-        reject(e);
-      }
-    });
+    // 1. Desktop CDP mode
+    if (typeof window.__agyBridgeCall === "function") {
+      return new Promise((resolve, reject) => {
+        const reqId = `req_${Date.now()}_${bridgeReqSeq++}`;
+        const timer = setTimeout(() => {
+          pendingBridgeCalls.delete(reqId);
+          reject(new Error("Bridge call timed out"));
+        }, 6000);
+        pendingBridgeCalls.set(reqId, { resolve, reject, timer });
+        try {
+          window.__agyBridgeCall(JSON.stringify({ reqId, cmd, args }));
+        } catch (e) {
+          clearTimeout(timer);
+          pendingBridgeCalls.delete(reqId);
+          reject(e);
+        }
+      });
+    }
+
+    // 2. Web HTTP mode (/__agy-plugin/api)
+    return fetch("/__agy-plugin/api", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ cmd, args })
+    })
+      .then(r => r.json())
+      .then(resObj => {
+        if (resObj && resObj.ok) return resObj.data;
+        throw new Error(resObj?.error || "Web API call failed");
+      });
+  }
+
+  function ensureWebEventSource() {
+    if (!isWebMode() || webEventSource) return;
+    try {
+      webEventSource = new EventSource("/__agy-plugin/pi-stream", { withCredentials: true });
+      webEventSource.onmessage = (e) => {
+        try {
+          const evt = JSON.parse(e.data);
+          if (window.__agyPiStreamEvent) {
+            window.__agyPiStreamEvent(evt);
+          }
+        } catch (err) {}
+      };
+      webEventSource.onerror = () => {
+        // Browser EventSource automatically reconnects
+      };
+    } catch (e) {}
   }
 
   // --- Config State ---
   function loadInitialConfig() {
+    if (window.__AGY_INITIAL_PROJECT_TAGS__) {
+      return JSON.parse(JSON.stringify(window.__AGY_INITIAL_PROJECT_TAGS__));
+    }
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
@@ -82,9 +134,6 @@
         }
       }
     } catch (e) {}
-    if (window.__AGY_INITIAL_PROJECT_TAGS__) {
-      return JSON.parse(JSON.stringify(window.__AGY_INITIAL_PROJECT_TAGS__));
-    }
     return {
       version: 1,
       activeTag: "all",
@@ -105,12 +154,12 @@
       if (raw) {
         const p = JSON.parse(raw);
         return {
-          height: Math.min(520, Math.max(110, Number(p.height) || 220)),
+          height: Math.min(520, Math.max(110, Number(p.height) || 210)),
           collapsed: Boolean(p.collapsed)
         };
       }
     } catch (e) {}
-    return { height: 220, collapsed: false };
+    return { height: 210, collapsed: false };
   }
 
   function loadPiEngineState() {
@@ -131,7 +180,7 @@
   if (!state.activeTag) state.activeTag = "all";
   let filesPanelPrefs = loadFilesPanelState();
   let piEngineState = loadPiEngineState();
-  let piModelsCatalog = []; // Array<{ fullId, provider, id, name }>
+  let piModelsCatalog = [];
 
   function saveFilesPanelPrefs() {
     try {
@@ -155,11 +204,13 @@
         window.nativeStorage.updateItems({ [STORAGE_KEY]: json });
       }
     } catch (e) {}
-    try {
-      if (typeof window.__agySaveProjectTags === "function") {
+    if (typeof window.__agySaveProjectTags === "function") {
+      try {
         window.__agySaveProjectTags(json);
-      }
-    } catch (e) {}
+      } catch (e) {}
+    } else {
+      callBridge("saveTags", { rawStr: json }).catch(() => {});
+    }
   }
 
   // --- Styles ---
@@ -176,7 +227,7 @@
         flex-wrap: wrap;
         align-items: center;
         gap: 4px;
-        padding: 2px 10px 6px 10px;
+        padding: 2px 8px 6px 8px;
         user-select: none;
         flex-shrink: 0;
       }
@@ -271,8 +322,8 @@
         border-radius: 10px;
         background: var(--popover, #ffffff);
         color: var(--popover-foreground, #111827);
-        border: 1px solid rgba(128, 128, 128, 0.24);
-        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18), 0 2px 6px rgba(0, 0, 0, 0.08);
+        border: 1px solid rgba(128, 128, 128, 0.22);
+        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.16), 0 2px 6px rgba(0, 0, 0, 0.06);
         font-size: 12px;
         user-select: none;
       }
@@ -281,8 +332,8 @@
         padding: 10px;
       }
       #agy-file-ctx-menu {
-        min-width: 188px;
-        padding: 5px;
+        min-width: 196px;
+        padding: 4px;
       }
       #agy-pi-model-popover {
         width: 280px;
@@ -420,179 +471,101 @@
         transform: scale(1.15);
       }
 
-      /* --- Project Files Browser Panel --- */
+      /* --- Native-Look Project Files Section --- */
       #agy-project-files-panel {
         display: flex;
         flex-direction: column;
         flex-shrink: 0;
-        margin: 0 8px 4px 8px;
-        border-radius: 8px;
-        border: 1px solid rgba(128, 128, 128, 0.18);
-        background: rgba(128, 128, 128, 0.04);
-        overflow: hidden;
+        width: 100%;
         user-select: none;
       }
       #agy-files-resizer {
-        height: 5px;
+        height: 7px;
+        display: flex;
+        align-items: center;
         cursor: ns-resize;
         width: 100%;
         flex-shrink: 0;
-        background: transparent;
-        transition: background 0.12s ease;
+        padding: 0 8px;
       }
-      #agy-files-resizer:hover, #agy-files-resizer.dragging {
-        background: rgba(37, 99, 235, 0.35);
+      #agy-files-resizer-line {
+        height: 1px;
+        width: 100%;
+        background: rgba(128, 128, 128, 0.18);
+        transition: background 0.12s ease, height 0.12s ease;
       }
-      .agy-files-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 4px 8px 5px 8px;
-        border-bottom: 1px solid rgba(128, 128, 128, 0.12);
-        font-size: 11.5px;
-        font-weight: 600;
-        gap: 6px;
-        flex-shrink: 0;
-      }
-      #agy-project-files-panel.collapsed .agy-files-header {
-        border-bottom: none;
-      }
-      .agy-files-header-left {
-        display: flex;
-        align-items: center;
-        gap: 5px;
-        min-width: 0;
-        flex: 1;
-        cursor: pointer;
-      }
-      .agy-files-proj-badge {
-        display: inline-block;
-        padding: 1px 6px;
-        border-radius: 4px;
-        font-size: 10.5px;
-        font-weight: 500;
-        background: rgba(37, 99, 235, 0.12);
-        color: #2563eb;
-        max-width: 140px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-      html[style*="dark"] .agy-files-proj-badge {
-        background: rgba(59, 130, 246, 0.2);
-        color: #60a5fa;
-      }
-      .agy-files-actions {
-        display: flex;
-        align-items: center;
-        gap: 2px;
-        flex-shrink: 0;
-      }
-      .agy-files-icon-btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 22px;
-        height: 22px;
-        border-radius: 5px;
-        border: none;
-        background: transparent;
-        color: inherit;
-        opacity: 0.65;
-        cursor: pointer;
-        padding: 0;
-        font-size: 12px;
-      }
-      .agy-files-icon-btn:hover {
-        opacity: 1;
-        background: rgba(128, 128, 128, 0.15);
+      #agy-files-resizer:hover #agy-files-resizer-line,
+      #agy-files-resizer.dragging #agy-files-resizer-line {
+        height: 2px;
+        background: rgba(37, 99, 235, 0.55);
       }
       #agy-files-tree {
         flex: 1;
         min-height: 0;
         overflow-y: auto;
         overflow-x: hidden;
-        padding: 4px 4px;
-        font-size: 12px;
+        padding: 2px 8px 4px 8px;
       }
-      #agy-project-files-panel.collapsed #agy-files-tree,
-      #agy-project-files-panel.collapsed #agy-files-resizer {
+      #agy-project-files-panel.collapsed #agy-files-tree {
         display: none;
       }
-      .agy-file-row {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        height: 24px;
-        padding-right: 6px;
-        border-radius: 5px;
-        cursor: pointer;
-        color: inherit;
-        transition: background 0.08s ease;
-        white-space: nowrap;
-      }
-      .agy-file-row:hover {
-        background: rgba(128, 128, 128, 0.11);
-      }
-      .agy-file-row.selected {
-        background: rgba(37, 99, 235, 0.15);
-        color: #2563eb;
-        font-weight: 500;
-      }
-      html[style*="dark"] .agy-file-row.selected {
-        background: rgba(59, 130, 246, 0.24);
-        color: #93c5fd;
-      }
-      .agy-file-row-left {
-        display: flex;
-        align-items: center;
-        gap: 5px;
-        min-width: 0;
-        flex: 1;
-        overflow: hidden;
-      }
-      .agy-file-caret {
-        width: 12px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 9px;
-        opacity: 0.6;
+      .agy-native-file-icon {
+        width: 15px;
+        height: 15px;
         flex-shrink: 0;
-      }
-      .agy-file-icon {
-        font-size: 12.5px;
-        line-height: 1;
-        flex-shrink: 0;
-      }
-      .agy-file-name {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        font-size: 12px;
+        object-fit: contain;
       }
       .agy-file-meta {
-        font-size: 10px;
-        opacity: 0.48;
+        font-size: 10.5px;
+        opacity: 0.42;
         margin-left: 6px;
         flex-shrink: 0;
         font-variant-numeric: tabular-nums;
       }
+      .agy-file-more-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 20px;
+        height: 20px;
+        border-radius: 4px;
+        border: none;
+        background: transparent;
+        color: inherit;
+        opacity: 0;
+        cursor: pointer;
+        padding: 0;
+        flex-shrink: 0;
+        transition: opacity 0.1s ease, background 0.1s ease;
+      }
+      .agy-file-row-btn:hover .agy-file-more-btn,
+      .agy-file-row-btn.selected .agy-file-more-btn {
+        opacity: 0.6;
+      }
+      @media (pointer: coarse) {
+        .agy-file-more-btn {
+          opacity: 0.55;
+        }
+      }
+      .agy-file-more-btn:hover {
+        opacity: 1 !important;
+        background: rgba(128, 128, 128, 0.16);
+      }
       .agy-file-opened-pill {
-        font-size: 9.5px;
+        font-size: 10px;
         padding: 1px 5px;
         border-radius: 4px;
-        background: rgba(5, 150, 105, 0.16);
+        background: rgba(5, 150, 105, 0.15);
         color: #059669;
-        font-weight: 600;
+        font-weight: 500;
         margin-left: 4px;
         flex-shrink: 0;
       }
       .agy-files-empty {
-        padding: 14px 10px;
+        padding: 12px 10px;
         text-align: center;
-        font-size: 11.5px;
-        opacity: 0.55;
+        font-size: 12px;
+        opacity: 0.45;
       }
       .agy-ctx-item {
         display: flex;
@@ -604,25 +577,27 @@
         font-size: 12px;
         transition: background 0.1s ease;
       }
-      .agy-ctx-item:hover {
-        background: rgba(37, 99, 235, 0.12);
-        color: #2563eb;
+      .agy-ctx-item svg {
+        opacity: 0.65;
+        flex-shrink: 0;
       }
-      html[style*="dark"] .agy-ctx-item:hover {
-        background: rgba(59, 130, 246, 0.22);
-        color: #93c5fd;
+      .agy-ctx-item:hover {
+        background: rgba(128, 128, 128, 0.12);
+      }
+      .agy-ctx-item:hover svg {
+        opacity: 0.95;
       }
       .agy-ctx-sep {
         height: 1px;
         margin: 4px 4px;
-        background: rgba(128, 128, 128, 0.16);
+        background: rgba(128, 128, 128, 0.15);
       }
 
       /* --- AGY / Pi Dual-Engine Selector & Chat UI --- */
       #agy-pi-engine-bar {
         display: inline-flex;
         align-items: center;
-        gap: 5px;
+        gap: 4px;
         margin-right: 4px;
         user-select: none;
       }
@@ -632,8 +607,8 @@
         height: 26px;
         padding: 2px;
         border-radius: 999px;
-        background: rgba(128, 128, 128, 0.12);
-        border: 1px solid rgba(128, 128, 128, 0.18);
+        background: rgba(128, 128, 128, 0.11);
+        border: 1px solid rgba(128, 128, 128, 0.16);
       }
       .agy-engine-opt {
         border: none;
@@ -645,7 +620,7 @@
         padding: 0 8px;
         border-radius: 999px;
         cursor: pointer;
-        opacity: 0.7;
+        opacity: 0.68;
         transition: all 0.14s ease;
         display: inline-flex;
         align-items: center;
@@ -658,16 +633,14 @@
       .agy-engine-opt.active-agy {
         opacity: 1;
         font-weight: 600;
-        background: #2563eb;
-        color: #ffffff;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+        background: rgba(128, 128, 128, 0.2);
+        color: inherit;
       }
       .agy-engine-opt.active-pi {
         opacity: 1;
         font-weight: 600;
         background: #7c3aed;
         color: #ffffff;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
       }
       #agy-pi-model-trigger {
         display: inline-flex;
@@ -677,21 +650,21 @@
         padding: 0 9px;
         border-radius: 999px;
         font-size: 11.5px;
-        font-weight: 600;
-        border: 1px solid rgba(124, 58, 237, 0.35);
-        background: rgba(124, 58, 237, 0.1);
+        font-weight: 500;
+        border: 1px solid rgba(124, 58, 237, 0.32);
+        background: rgba(124, 58, 237, 0.08);
         color: #7c3aed;
         cursor: pointer;
         white-space: nowrap;
         transition: all 0.12s ease;
       }
       html[style*="dark"] #agy-pi-model-trigger {
-        background: rgba(139, 92, 246, 0.2);
+        background: rgba(139, 92, 246, 0.18);
         color: #c4b5fd;
-        border-color: rgba(139, 92, 246, 0.4);
+        border-color: rgba(139, 92, 246, 0.36);
       }
       #agy-pi-model-trigger:hover {
-        background: rgba(124, 58, 237, 0.18);
+        background: rgba(124, 58, 237, 0.15);
       }
       #agy-pi-send-btn {
         display: inline-flex;
@@ -712,15 +685,15 @@
       #agy-pi-send-btn:hover {
         opacity: 0.92;
       }
-      .agy-pi-mode-card-ring {
-        box-shadow: 0 0 0 1.5px rgba(124, 58, 237, 0.45) !important;
+      .agy-pi-mode-ring {
+        box-shadow: 0 0 0 1.5px rgba(124, 58, 237, 0.4) !important;
       }
       .agy-pi-model-group-title {
         font-size: 10px;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.04em;
-        opacity: 0.55;
+        opacity: 0.5;
         padding: 4px 6px 2px 6px;
       }
       .agy-pi-model-item {
@@ -733,10 +706,10 @@
         font-size: 12px;
       }
       .agy-pi-model-item:hover {
-        background: rgba(124, 58, 237, 0.12);
+        background: rgba(128, 128, 128, 0.12);
       }
       .agy-pi-model-item.selected {
-        background: rgba(124, 58, 237, 0.16);
+        background: rgba(124, 58, 237, 0.14);
         color: #7c3aed;
         font-weight: 600;
       }
@@ -759,8 +732,8 @@
         flex-direction: column;
         gap: 8px;
         border-radius: 12px;
-        border: 1px solid rgba(124, 58, 237, 0.25);
-        background: rgba(124, 58, 237, 0.03);
+        border: 1px solid rgba(128, 128, 128, 0.2);
+        background: rgba(128, 128, 128, 0.03);
         padding: 12px 14px;
       }
       .agy-pi-user-bubble {
@@ -787,16 +760,16 @@
         padding: 2px 8px;
         border-radius: 999px;
         font-weight: 600;
-        background: rgba(124, 58, 237, 0.14);
+        background: rgba(124, 58, 237, 0.12);
         color: #7c3aed;
       }
       html[style*="dark"] .agy-pi-badge {
-        background: rgba(139, 92, 246, 0.22);
+        background: rgba(139, 92, 246, 0.2);
         color: #c4b5fd;
       }
       .agy-pi-ctx-pill {
-        font-size: 10.5px;
-        opacity: 0.65;
+        font-size: 11px;
+        opacity: 0.58;
         display: inline-flex;
         align-items: center;
         gap: 4px;
@@ -814,8 +787,8 @@
         font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
         padding: 2px 7px;
         border-radius: 5px;
-        background: rgba(128, 128, 128, 0.1);
-        border: 1px solid rgba(128, 128, 128, 0.16);
+        background: rgba(128, 128, 128, 0.09);
+        border: 1px solid rgba(128, 128, 128, 0.15);
         max-width: 100%;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -845,12 +818,13 @@
   let cachedRpp = null;
   let cachedSsp = null;
   let cachedEnf = null;
+  let cachedFitp = null;
 
   function findReactProviders() {
     const el = document.querySelector('[data-testid="conversation-list-sidebar"]');
     if (!el) return null;
     if (cachedRpp && cachedPmf && cachedSsp) {
-      return { pmf: cachedPmf, rpp: cachedRpp, ssp: cachedSsp, enf: cachedEnf };
+      return { pmf: cachedPmf, rpp: cachedRpp, ssp: cachedSsp, enf: cachedEnf, fitp: cachedFitp };
     }
     const fiberKey = Object.keys(el).find(k => k.startsWith("__reactFiber$"));
     if (!fiberKey) return null;
@@ -868,12 +842,38 @@
         if (v.electronNativeFeature) {
           cachedEnf = v.electronNativeFeature;
         }
+        if (v.fileIconThemeProvider) {
+          cachedFitp = v.fileIconThemeProvider;
+        }
       }
       cur = cur.return;
     }
     if (!cachedRpp) return null;
     hookRichProjectsProvider(cachedPmf, cachedRpp);
-    return { pmf: cachedPmf, rpp: cachedRpp, ssp: cachedSsp, enf: cachedEnf };
+    return { pmf: cachedPmf, rpp: cachedRpp, ssp: cachedSsp, enf: cachedEnf, fitp: cachedFitp };
+  }
+
+  function resolveNativeIconUrl(name, isDir) {
+    const found = findReactProviders();
+    const st = found?.fitp?.provider?.state;
+    if (!st || !st.iconDefinitions) return null;
+    const lower = (name || "").toLowerCase();
+    let key = null;
+    if (isDir) {
+      key = st.folderNames?.[lower] || st.folder || "folder";
+    } else {
+      const ext = lower.includes(".") ? lower.split(".").pop() : "";
+      key =
+        st.fileNames?.[name] ||
+        st.fileNames?.[lower] ||
+        st.fileExtensions?.[ext] ||
+        st.languageIds?.[ext] ||
+        st.file ||
+        "document";
+    }
+    const rel = st.iconDefinitions[key]?.iconPath;
+    if (!rel) return null;
+    return rel.replace(/^\.\//, "/symbols-icons/");
   }
 
   function doesProjectMatchTag(projectId, activeTag) {
@@ -1077,7 +1077,7 @@
     return allProjs.find(p => p.folderPath) || null;
   }
 
-  // --- Project Files Browser State & Rendering ---
+  // --- Native-Look Project Files Section ---
   let currentFilesProject = null;
   const expandedDirs = new Set();
   const dirEntriesCache = new Map();
@@ -1089,21 +1089,6 @@
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(bytes < 10240 ? 1 : 0)} KB`;
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-  }
-
-  function getFileIcon(name, isDir, isExpanded) {
-    if (isDir) return isExpanded ? "📂" : "📁";
-    const ext = (name.split(".").pop() || "").toLowerCase();
-    if (["js", "jsx", "ts", "tsx", "py", "c", "cpp", "h", "rs", "go", "java", "sh", "zsh"].includes(ext)) return "📄";
-    if (["json", "yaml", "yml", "toml", "ini", "env", "plist", "xml"].includes(ext)) return "⚙️";
-    if (["md", "txt", "rtf", "log"].includes(ext)) return "📝";
-    if (["png", "jpg", "jpeg", "gif", "svg", "webp", "ico"].includes(ext)) return "🖼️";
-    if (["pdf"].includes(ext)) return "📕";
-    if (["csv", "xlsx", "xls", "parquet", "db", "sqlite"].includes(ext)) return "📊";
-    if (["mp3", "wav", "mp4", "mov", "mkv"].includes(ext)) return "🎬";
-    if (["zip", "tar", "gz", "7z", "rar", "dmg"].includes(ext)) return "📦";
-    if (["html", "css", "scss"].includes(ext)) return "🌐";
-    return "📄";
   }
 
   async function loadDirEntries(dirPath, forceRefresh = false) {
@@ -1151,16 +1136,20 @@
     if (!panel) {
       panel = document.createElement("div");
       panel.id = "agy-project-files-panel";
+      panel.className = "bg-sidebar";
       if (filesPanelPrefs.collapsed) {
         panel.classList.add("collapsed");
       } else {
         panel.style.height = `${filesPanelPrefs.height}px`;
       }
 
+      // Top 1px section divider + drag resizer
       const resizer = document.createElement("div");
       resizer.id = "agy-files-resizer";
-      resizer.title = "上下拖动调整 Files 窗口高度";
+      resizer.title = "上下拖动调整 Files 区域高度";
+      resizer.innerHTML = `<div id="agy-files-resizer-line"></div>`;
       resizer.onmousedown = (e) => {
+        if (filesPanelPrefs.collapsed) return;
         e.preventDefault();
         resizer.classList.add("dragging");
         const startY = e.clientY;
@@ -1182,38 +1171,47 @@
       };
       panel.appendChild(resizer);
 
-      const header = document.createElement("div");
-      header.className = "agy-files-header";
+      // Native Antigravity Section Header (identical to `Projects` header)
+      const headerWrap = document.createElement("div");
+      headerWrap.className = "group/section-header flex items-center justify-between px-4 h-6 select-none bg-sidebar shrink-0";
 
-      const headerLeft = document.createElement("div");
-      headerLeft.className = "agy-files-header-left";
-      headerLeft.title = "点击折叠/展开项目文件浏览框";
-      headerLeft.onclick = () => toggleFilesPanelCollapse();
+      const h2 = document.createElement("h2");
+      h2.className = "text-xs opacity-50 font-medium select-none m-0 min-w-0 flex-1 flex items-center";
 
-      const caretEl = document.createElement("span");
-      caretEl.id = "agy-files-collapse-caret";
-      caretEl.textContent = filesPanelPrefs.collapsed ? "▸" : "▾";
+      const titleBtn = document.createElement("button");
+      titleBtn.type = "button";
+      titleBtn.className = "flex min-w-0 items-center gap-1 border-none bg-transparent p-0 text-left cursor-pointer font-inherit text-inherit rounded focus-visible:outline-none";
+      titleBtn.onclick = () => toggleFilesPanelCollapse();
 
-      const labelEl = document.createElement("span");
-      labelEl.textContent = "Files";
+      const titleText = document.createElement("span");
+      titleText.className = "truncate";
+      titleText.textContent = "Files";
 
-      const projBadge = document.createElement("span");
-      projBadge.id = "agy-files-proj-badge";
-      projBadge.className = "agy-files-proj-badge";
-      projBadge.textContent = currentFilesProject?.name || "未选择项目";
+      const projSub = document.createElement("span");
+      projSub.id = "agy-files-proj-badge";
+      projSub.className = "truncate opacity-75 font-normal";
+      projSub.textContent = currentFilesProject?.name ? `· ${currentFilesProject.name}` : "";
 
-      headerLeft.appendChild(caretEl);
-      headerLeft.appendChild(labelEl);
-      headerLeft.appendChild(projBadge);
+      const caretWrap = document.createElement("span");
+      caretWrap.id = "agy-files-collapse-caret";
+      caretWrap.className = "inline-flex items-center justify-center transition-transform duration-150 " + (filesPanelPrefs.collapsed ? "" : "rotate-90");
+      caretWrap.innerHTML = SVG_ICONS.chevronRight;
+
+      titleBtn.appendChild(titleText);
+      titleBtn.appendChild(projSub);
+      titleBtn.appendChild(caretWrap);
+      h2.appendChild(titleBtn);
 
       const actions = document.createElement("div");
-      actions.className = "agy-files-actions";
+      actions.className = "flex items-center justify-end gap-1 shrink-0";
+
+      const btnClass = "inline-flex items-center font-medium transition-colors select-none outline-none cursor-pointer justify-center bg-transparent text-muted-foreground hover:text-foreground hover:bg-secondary h-5 w-5 shrink-0 rounded-md border-none p-0";
 
       const finderBtn = document.createElement("button");
       finderBtn.type = "button";
-      finderBtn.className = "agy-files-icon-btn";
-      finderBtn.title = "在 Finder 中打开当前项目文件夹";
-      finderBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>`;
+      finderBtn.className = btnClass;
+      finderBtn.title = "在 Finder 中打开项目根目录";
+      finderBtn.innerHTML = SVG_ICONS.finderOpen;
       finderBtn.onclick = (e) => {
         e.stopPropagation();
         if (currentFilesProject?.folderPath) {
@@ -1223,9 +1221,9 @@
 
       const refreshBtn = document.createElement("button");
       refreshBtn.type = "button";
-      refreshBtn.className = "agy-files-icon-btn";
+      refreshBtn.className = btnClass;
       refreshBtn.title = "刷新文件列表";
-      refreshBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>`;
+      refreshBtn.innerHTML = SVG_ICONS.refresh;
       refreshBtn.onclick = (e) => {
         e.stopPropagation();
         refreshProjectFiles(true);
@@ -1234,9 +1232,9 @@
       actions.appendChild(finderBtn);
       actions.appendChild(refreshBtn);
 
-      header.appendChild(headerLeft);
-      header.appendChild(actions);
-      panel.appendChild(header);
+      headerWrap.appendChild(h2);
+      headerWrap.appendChild(actions);
+      panel.appendChild(headerWrap);
 
       const tree = document.createElement("div");
       tree.id = "agy-files-tree";
@@ -1251,7 +1249,7 @@
 
     const badge = document.getElementById("agy-files-proj-badge");
     if (badge) {
-      badge.textContent = currentFilesProject?.name || "未选择项目";
+      badge.textContent = currentFilesProject?.name ? `· ${currentFilesProject.name}` : "";
       badge.title = currentFilesProject?.folderPath || "";
     }
     return panel;
@@ -1265,14 +1263,36 @@
     if (filesPanelPrefs.collapsed) {
       panel.classList.add("collapsed");
       panel.style.height = "auto";
-      if (caret) caret.textContent = "▸";
+      if (caret) caret.classList.remove("rotate-90");
     } else {
       panel.classList.remove("collapsed");
       panel.style.height = `${filesPanelPrefs.height}px`;
-      if (caret) caret.textContent = "▾";
+      if (caret) caret.classList.add("rotate-90");
       renderFilesTree(false);
     }
     saveFilesPanelPrefs();
+  }
+
+  function createFileIconElement(name, isDir) {
+    const iconUrl = resolveNativeIconUrl(name, isDir);
+    if (iconUrl) {
+      const img = document.createElement("img");
+      img.src = iconUrl;
+      img.className = "agy-native-file-icon";
+      img.alt = "";
+      img.draggable = false;
+      img.onerror = () => {
+        const span = document.createElement("span");
+        span.className = "inline-flex items-center justify-center w-4 h-4 shrink-0";
+        span.innerHTML = isDir ? SVG_ICONS.folderFallback : SVG_ICONS.fileFallback;
+        img.replaceWith(span);
+      };
+      return img;
+    }
+    const span = document.createElement("span");
+    span.className = "inline-flex items-center justify-center w-4 h-4 shrink-0";
+    span.innerHTML = isDir ? SVG_ICONS.folderFallback : SVG_ICONS.fileFallback;
+    return span;
   }
 
   async function renderFilesTree(forceFetchRoot = false) {
@@ -1287,7 +1307,7 @@
     const rootPath = currentFilesProject.folderPath;
     const rootEntries = await loadDirEntries(rootPath, forceFetchRoot);
     if (!rootEntries || rootEntries.length === 0) {
-      treeEl.innerHTML = `<div class="agy-files-empty">文件夹为空或无法读取</div>`;
+      treeEl.innerHTML = `<div class="agy-files-empty">文件夹为空</div>`;
       return;
     }
 
@@ -1296,42 +1316,72 @@
     async function appendEntries(entries, depth) {
       for (const item of entries) {
         const isExpanded = item.isDir && expandedDirs.has(item.path);
-        const row = document.createElement("div");
-        row.className = "agy-file-row" + (selectedFilePath === item.path ? " selected" : "");
-        row.style.paddingLeft = `${6 + depth * 14}px`;
-        row.title = `${item.path}\n• 单击：选中${item.isDir ? "/展开" : ""}\n• 双击：用系统默认程序打开\n• 右键：在 Finder 中显示 / 更多操作`;
+        const isSelected = selectedFilePath === item.path;
+
+        // Native Antigravity sidebar row button classes
+        const row = document.createElement("button");
+        row.type = "button";
+        row.className =
+          "agy-file-row-btn group/headerbtn flex items-center justify-between pr-1.5 h-7 rounded-lg select-none cursor-pointer w-full border-none outline-none text-left transition-colors " +
+          (isSelected
+            ? "selected bg-muted text-secondary-foreground font-medium"
+            : "text-muted-foreground hover:bg-muted hover:text-secondary-foreground bg-sidebar");
+        row.style.paddingLeft = `${4 + depth * 14}px`;
+        row.title = item.path;
 
         const left = document.createElement("div");
-        left.className = "agy-file-row-left";
+        left.className = "flex items-center gap-1.5 min-w-0 flex-1 overflow-hidden";
 
+        // Chevron for folders, spacer for files
         const caret = document.createElement("span");
-        caret.className = "agy-file-caret";
-        caret.textContent = item.isDir ? (isExpanded ? "▾" : "▸") : "";
+        caret.className = "w-3.5 h-3.5 shrink-0 inline-flex items-center justify-center opacity-60";
+        if (item.isDir) {
+          caret.innerHTML = SVG_ICONS.chevronRight;
+          if (isExpanded) {
+            caret.firstElementChild?.classList.add("rotate-90");
+          }
+        }
 
-        const icon = document.createElement("span");
-        icon.className = "agy-file-icon";
-        icon.textContent = getFileIcon(item.name, item.isDir, isExpanded);
+        const iconEl = createFileIconElement(item.name, item.isDir);
 
         const nameSpan = document.createElement("span");
-        nameSpan.className = "agy-file-name";
+        nameSpan.className = "truncate text-sm";
         nameSpan.textContent = item.name;
 
         left.appendChild(caret);
-        left.appendChild(icon);
+        left.appendChild(iconEl);
         left.appendChild(nameSpan);
         row.appendChild(left);
+
+        const right = document.createElement("div");
+        right.className = "flex items-center gap-1 shrink-0";
 
         if (recentlyOpenedPath === item.path) {
           const pill = document.createElement("span");
           pill.className = "agy-file-opened-pill";
           pill.textContent = "已打开";
-          row.appendChild(pill);
+          right.appendChild(pill);
         } else if (!item.isDir && item.size > 0) {
           const meta = document.createElement("span");
           meta.className = "agy-file-meta";
           meta.textContent = formatFileSize(item.size);
-          row.appendChild(meta);
+          right.appendChild(meta);
         }
+
+        // Subtle 'More' button for touch/mobile Web and quick click
+        const moreBtn = document.createElement("span");
+        moreBtn.className = "agy-file-more-btn";
+        moreBtn.title = "文件操作菜单";
+        moreBtn.innerHTML = SVG_ICONS.moreHorizontal;
+        moreBtn.onclick = (e) => {
+          e.stopPropagation();
+          e.preventDefault();
+          selectedFilePath = item.path;
+          const r = moreBtn.getBoundingClientRect();
+          openFileContextMenu(item, r.left, r.bottom + 4);
+        };
+        right.appendChild(moreBtn);
+        row.appendChild(right);
 
         row.onclick = async (e) => {
           e.stopPropagation();
@@ -1352,7 +1402,11 @@
           e.preventDefault();
           selectedFilePath = item.path;
           if (!item.isDir) {
-            triggerOpenWithDefaultApp(item.path);
+            if (isWebMode()) {
+              window.open(`/__agy-plugin/file?path=${encodeURIComponent(item.path)}`, "_blank");
+            } else {
+              triggerOpenWithDefaultApp(item.path);
+            }
           }
         };
 
@@ -1422,25 +1476,42 @@
     menu.id = "agy-file-ctx-menu";
     document.body.appendChild(menu);
 
-    const actions = [
+    const actions = [];
+    if (!item.isDir && isWebMode()) {
+      actions.push(
+        {
+          svg: SVG_ICONS.externalLink,
+          label: "在浏览器中打开 / 预览",
+          onClick: () => window.open(`/__agy-plugin/file?path=${encodeURIComponent(item.path)}`, "_blank")
+        },
+        {
+          svg: SVG_ICONS.download,
+          label: "下载文件到当前设备",
+          onClick: () => window.open(`/__agy-plugin/file?path=${encodeURIComponent(item.path)}&download=1`, "_blank")
+        },
+        { sep: true }
+      );
+    }
+
+    actions.push(
       {
-        icon: "📂",
-        label: "在 Finder 中显示",
+        svg: SVG_ICONS.finderOpen,
+        label: isWebMode() ? "在 Mac Finder 中显示" : "在 Finder 中显示",
         onClick: () => triggerRevealInFinder(item.path)
       },
       {
-        icon: "🚀",
-        label: "用系统默认程序打开",
+        svg: SVG_ICONS.externalLink,
+        label: isWebMode() ? "在 Mac 默认程序中打开" : "用系统默认程序打开",
         onClick: () => triggerOpenWithDefaultApp(item.path)
       },
       { sep: true },
       {
-        icon: "📋",
+        svg: SVG_ICONS.copy,
         label: "复制完整路径",
         onClick: () => navigator.clipboard?.writeText(item.path)
       },
       {
-        icon: "📄",
+        svg: SVG_ICONS.copy,
         label: "复制相对路径",
         onClick: () => {
           const root = currentFilesProject?.folderPath || "";
@@ -1450,7 +1521,7 @@
           navigator.clipboard?.writeText(rel);
         }
       }
-    ];
+    );
 
     actions.forEach(act => {
       if (act.sep) {
@@ -1461,7 +1532,7 @@
       }
       const el = document.createElement("div");
       el.className = "agy-ctx-item";
-      el.innerHTML = `<span>${act.icon}</span><span>${escapeHtml(act.label)}</span>`;
+      el.innerHTML = `${act.svg}<span>${escapeHtml(act.label)}</span>`;
       el.onclick = (e) => {
         e.stopPropagation();
         closeFileContextMenu();
@@ -1497,8 +1568,8 @@
     const nativeModelBtn = document.querySelector('[data-testid="model-selector-trigger"]');
     if (!nativeModelBtn) return;
 
-    const btnWrapper = nativeModelBtn.parentElement; // div.min-w-0
-    const rowContainer = btnWrapper?.parentElement; // div.min-w-0.no-focus-agent-input
+    const btnWrapper = nativeModelBtn.parentElement;
+    const rowContainer = btnWrapper?.parentElement;
     if (!rowContainer) return;
 
     rowContainer.style.display = "inline-flex";
@@ -1515,7 +1586,6 @@
     const isPi = piEngineState.engine === "pi";
     nativeModelBtn.style.display = isPi ? "none" : "";
 
-    // Highlight input card ring when in Pi mode
     let footer = rowContainer;
     while (footer && !footer.className?.includes?.("input-footer")) {
       footer = footer.parentElement;
@@ -1531,7 +1601,6 @@
     bar.setAttribute("data-sig", sig);
     bar.innerHTML = "";
 
-    // 1. Segmented Engine Switcher (AGY vs Pi)
     const sw = document.createElement("div");
     sw.className = "agy-engine-switch";
 
@@ -1539,7 +1608,7 @@
     agyOpt.type = "button";
     agyOpt.className = "agy-engine-opt" + (!isPi ? " active-agy" : "");
     agyOpt.title = "使用本机 Antigravity (AGY) 引擎";
-    agyOpt.innerHTML = `<span>⚡ AGY</span>`;
+    agyOpt.textContent = "AGY";
     agyOpt.onclick = (e) => {
       e.stopPropagation();
       piEngineState.engine = "agy";
@@ -1551,7 +1620,7 @@
     piOpt.type = "button";
     piOpt.className = "agy-engine-opt" + (isPi ? " active-pi" : "");
     piOpt.title = "切换到本机 Pi 引擎（可选全部第三方模型，共享当前项目与上下文）";
-    piOpt.innerHTML = `<span>🥧 Pi</span>`;
+    piOpt.textContent = "Pi";
     piOpt.onclick = async (e) => {
       e.stopPropagation();
       piEngineState.engine = "pi";
@@ -1564,7 +1633,6 @@
     sw.appendChild(piOpt);
     bar.appendChild(sw);
 
-    // 2. When Pi engine is active, show Pi internal model selector + Send button
     if (isPi) {
       const modelTrig = document.createElement("button");
       modelTrig.type = "button";
@@ -1583,7 +1651,7 @@
       sendBtn.type = "button";
       sendBtn.id = "agy-pi-send-btn";
       sendBtn.title = "发送当前输入框内容给 Pi 执行 (快捷键: Enter)";
-      sendBtn.innerHTML = `<span>发送给 Pi ↵</span>`;
+      sendBtn.innerHTML = `<span>发送 ↵</span>`;
       sendBtn.onclick = (e) => {
         e.stopPropagation();
         submitPromptToPi();
@@ -1643,7 +1711,7 @@
           item.className = "agy-pi-model-item" + (isSel ? " selected" : "");
           item.innerHTML = `
             <span class="truncate">${escapeHtml(m.id)}</span>
-            <span style="font-size:10px;opacity:0.55">${isSel ? "✓ 当前" : (m.reasoning ? "🧠" : "")}</span>
+            <span style="font-size:10px;opacity:0.55">${isSel ? "✓" : ""}</span>
           `;
           item.onclick = (e) => {
             e.stopPropagation();
@@ -1684,7 +1752,7 @@
   }
 
   // --- Pi Turns Rendering in Conversation Stream ---
-  const activePiTurnsByConv = new Map(); // convId -> Array<TurnObj>
+  const activePiTurnsByConv = new Map();
   let loadedConvIdForPi = null;
 
   function findConversationStreamContainer() {
@@ -1742,13 +1810,11 @@
       const card = document.createElement("div");
       card.className = "agy-pi-turn-card";
 
-      // User prompt bubble
       const userBubble = document.createElement("div");
       userBubble.className = "agy-pi-user-bubble";
       userBubble.textContent = t.prompt;
       card.appendChild(userBubble);
 
-      // Assistant header
       const header = document.createElement("div");
       header.className = "agy-pi-assistant-header";
 
@@ -1757,8 +1823,8 @@
       leftInfo.style.alignItems = "center";
       leftInfo.style.gap = "8px";
       leftInfo.innerHTML = `
-        <span class="agy-pi-badge">🥧 Pi · ${escapeHtml(t.model || "claude-haiku-5.5")}</span>
-        <span class="agy-pi-ctx-pill">📁 ${escapeHtml((t.projectPath || "").split("/").filter(Boolean).pop() || "项目目录")} · 🔗 共享 AGY 上下文</span>
+        <span class="agy-pi-badge">Pi · ${escapeHtml(t.model || "claude-haiku-5.5")}</span>
+        <span class="agy-pi-ctx-pill">${escapeHtml((t.projectPath || "").split("/").filter(Boolean).pop() || "项目目录")} · 已共享上下文</span>
       `;
       header.appendChild(leftInfo);
 
@@ -1766,7 +1832,7 @@
         const stopBtn = document.createElement("button");
         stopBtn.type = "button";
         stopBtn.className = "agy-pi-stop-btn";
-        stopBtn.textContent = "⏹ 停止";
+        stopBtn.textContent = "停止";
         stopBtn.onclick = () => {
           callBridge("stopPiRun", { runId: t.runId });
         };
@@ -1775,24 +1841,21 @@
 
       card.appendChild(header);
 
-      // Tool calls list
       if (Array.isArray(t.tools) && t.tools.length > 0) {
         const toolsBox = document.createElement("div");
         toolsBox.className = "agy-pi-tools-list";
         for (const tl of t.tools) {
           const pill = document.createElement("span");
           pill.className = "agy-pi-tool-pill";
-          const icon = tl.name === "bash" ? "⚡" : tl.name === "read" ? "📖" : tl.name === "edit" ? "✏️" : "📝";
-          pill.textContent = `${icon} ${tl.name}: ${tl.summary || ""}`;
+          pill.textContent = `${tl.name}: ${tl.summary || ""}`;
           toolsBox.appendChild(pill);
         }
         card.appendChild(toolsBox);
       }
 
-      // Response body
       const body = document.createElement("div");
       body.className = "agy-pi-response-body";
-      body.textContent = t.response || (t.running ? "⏳ Pi 正在思考并处理项目文件..." : "");
+      body.textContent = t.response || (t.running ? "Pi 正在处理项目文件..." : "");
       card.appendChild(body);
 
       container.appendChild(card);
@@ -1803,12 +1866,40 @@
     }
   }
 
-  const unsyncedPiByConv = new Set(); // convIds that have new Pi turns not yet sent to AGY
+  const unsyncedPiByConv = new Set();
 
   window.__agyPiStreamEvent = function(evt) {
-    if (!evt || !evt.turnId) return;
+    if (!evt) return;
+
+    // Real-time tag sync across Desktop & Web
+    if (evt.type === "tags_updated" && evt.config) {
+      state = evt.config;
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch (e) {}
+      const found = findReactProviders();
+      if (found) applyTagFilterToRpp(found.rpp);
+      renderTagBar();
+      decorateProjectCards();
+      return;
+    }
+
+    if (!evt.turnId) return;
     const convId = evt.conversationId || getCurrentConversationId() || "global";
-    const list = activePiTurnsByConv.get(convId) || [];
+    let list = activePiTurnsByConv.get(convId);
+    if (!list) {
+      list = [];
+      activePiTurnsByConv.set(convId, list);
+    }
+
+    if (evt.type === "turn_init" && evt.turn) {
+      if (!list.some(t => t.turnId === evt.turnId)) {
+        list.push(evt.turn);
+        renderPiTurnsInDom(true);
+      }
+      return;
+    }
+
     const turn = list.find(t => t.turnId === evt.turnId);
     if (!turn) return;
 
@@ -1827,7 +1918,7 @@
       refreshProjectFiles(true);
     } else if (evt.type === "error") {
       turn.running = false;
-      turn.response = (turn.response ? turn.response + "\n\n" : "") + `❌ 错误: ${evt.error}`;
+      turn.response = (turn.response ? turn.response + "\n\n" : "") + `错误: ${evt.error}`;
       renderPiTurnsInDom(true);
     }
   };
@@ -1871,14 +1962,11 @@
       });
     } catch (e) {
       newTurn.running = false;
-      newTurn.response = `❌ 启动 Pi 失败: ${e.message}`;
+      newTurn.response = `启动 Pi 失败: ${e.message}`;
       renderPiTurnsInDom(true);
     }
   }
 
-  // Intercept Enter key in chat input:
-  // - In Pi mode: intercept and send to Pi engine
-  // - In AGY mode: if Pi ran turns since last AGY message, append shared context note automatically
   const onKeyDownCapture = (e) => {
     if (e.key === "Enter" && !e.shiftKey && !e.isComposing && !e.metaKey && !e.ctrlKey && !e.altKey) {
       const edEl = e.target?.closest?.('[data-lexical-editor="true"]');
@@ -1892,7 +1980,6 @@
         return;
       }
 
-      // AGY mode: check if there are unsynced Pi turns in this conversation
       const convId = getCurrentConversationId();
       if (convId && unsyncedPiByConv.has(convId)) {
         unsyncedPiByConv.delete(convId);
@@ -2100,7 +2187,7 @@
           tagBtn.className = "agy-proj-tag-btn";
           tagBtn.title = "设置项目标签";
           tagBtn.setAttribute("data-no-drag", "");
-          tagBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>`;
+          tagBtn.innerHTML = SVG_ICONS.tag;
           tagBtn.onclick = (e) => {
             e.stopPropagation();
             e.preventDefault();
@@ -2357,8 +2444,18 @@
     });
   });
 
-  function startObserver() {
+  async function startObserver() {
     ensureStyles();
+    ensureWebEventSource();
+    if (isWebMode()) {
+      try {
+        const latestCfg = await callBridge("getTags");
+        if (latestCfg && Array.isArray(latestCfg.tags)) {
+          state = latestCfg;
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        }
+      } catch (e) {}
+    }
     loadPiModelsIfNeeded();
     refreshAll();
     observer.observe(document.body, { childList: true, subtree: true });
@@ -2366,6 +2463,10 @@
 
   function _cleanupForUpgrade() {
     observer.disconnect();
+    if (webEventSource) {
+      try { webEventSource.close(); } catch (e) {}
+      webEventSource = null;
+    }
     history.pushState = origPushState;
     history.replaceState = origReplaceState;
     window.removeEventListener("popstate", checkUrlChange);
@@ -2374,13 +2475,13 @@
     closeTagPopover();
     closeFileContextMenu();
     closePiModelPopover();
+    document.getElementById("agy-project-files-panel")?.remove();
+    document.getElementById("agy-pi-engine-bar")?.remove();
   }
 
   function uninstall() {
     _cleanupForUpgrade();
     document.getElementById("agy-project-tags-bar")?.remove();
-    document.getElementById("agy-project-files-panel")?.remove();
-    document.getElementById("agy-pi-engine-bar")?.remove();
     document.getElementById("agy-pi-turns-container")?.remove();
     document.getElementById("agy-project-tags-style")?.remove();
     const nativeModelBtn = document.querySelector('[data-testid="model-selector-trigger"]');
@@ -2411,5 +2512,5 @@
   } else {
     startObserver();
   }
-  return "injected_v4_ok";
+  return "injected_v6_ok";
 })();
