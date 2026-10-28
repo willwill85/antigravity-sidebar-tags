@@ -1,5 +1,5 @@
 (() => {
-  const INSTANCE_VERSION = 6;
+  const INSTANCE_VERSION = 11;
   const STORAGE_KEY = "agy_project_tags_v1";
   const FILES_PANEL_STATE_KEY = "agy_files_panel_state_v1";
   const PI_ENGINE_STATE_KEY = "agy_pi_engine_state_v1";
@@ -14,8 +14,11 @@
     "#4f46e5"  // Indigo
   ];
 
-  // Clean monochrome SVG icons matching Antigravity's Material Symbols / Lucide aesthetic
+  // Clean monochrome & brand SVG icons matching Antigravity and Pi official vectors
   const SVG_ICONS = {
+    agyLogo: `<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="88 94 340 316" class="shrink-0" aria-hidden="true"><defs><linearGradient id="agy-brand-grad" x1="258" y1="106" x2="258" y2="396" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F8623A"/><stop offset="22%" stop-color="#E59B38"/><stop offset="44%" stop-color="#58A68C"/><stop offset="68%" stop-color="#3487FD"/><stop offset="100%" stop-color="#589FFA"/></linearGradient><radialGradient id="agy-brand-green" cx="195" cy="175" r="110" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#76C84D" stop-opacity="0.9"/><stop offset="100%" stop-color="#76C84D" stop-opacity="0"/></radialGradient><radialGradient id="agy-brand-red" cx="305" cy="165" r="115" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F45242" stop-opacity="0.88"/><stop offset="100%" stop-color="#F45242" stop-opacity="0"/></radialGradient></defs><path fill="url(#agy-brand-grad)" d="M258 110C214 110 192 175 167 260C148 325 132 355 108 377C101 384 105 394 116 394C138 394 166 360 198 308C218 276 236 263 258 263C280 263 298 276 318 308C350 360 378 394 400 394C411 394 415 384 408 377C384 355 368 325 349 260C324 175 302 110 258 110Z"/><path fill="url(#agy-brand-green)" d="M258 110C214 110 192 175 167 260C148 325 132 355 108 377C101 384 105 394 116 394C138 394 166 360 198 308C218 276 236 263 258 263C280 263 298 276 318 308C350 360 378 394 400 394C411 394 415 384 408 377C384 355 368 325 349 260C324 175 302 110 258 110Z"/><path fill="url(#agy-brand-red)" d="M258 110C214 110 192 175 167 260C148 325 132 355 108 377C101 384 105 394 116 394C138 394 166 360 198 308C218 276 236 263 258 263C280 263 298 276 318 308C350 360 378 394 400 394C411 394 415 384 408 377C384 355 368 325 349 260C324 175 302 110 258 110Z"/></svg>`,
+    piLogo: `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="150 150 500 500" class="shrink-0" aria-hidden="true"><path fill="#F09082" d="M165.29 165.29H517.36V400H400V282.65H165.29Z"/><path fill="#4D9ABF" d="M165.29 282.65H282.65V400H400V517.36H282.65V634.72H165.29Z"/><path fill="#F1BE58" d="M517.36 400H634.72V634.72H517.36Z"/></svg>`,
+    statusSpinner: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 -960 960 960" fill="currentColor" class="animate-spin shrink-0 opacity-70" data-testid="status-loading-spinner"><path d="M332.55-129.9q-69.29-29.9-121.02-81.63T129.9-332.55T100-480.35t29.96-147.5t81.58-120.61t121.04-81.58T480-860q12.75,0 21.37,8.63T510-829.99t-8.62,21.37T480-800q-133,0-226.5,93.5T160-480t93.5,226.5T480-160t226.5-93.5T800-480q0-12.77 8.63-21.38T830.01-510t21.37,8.62T860-480q0,77.99-29.96,147.42T748.46-211.54T627.85-129.96T480.35-100t-147.8-29.9Z"></path></svg>`,
     chevronRight: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 -960 960 960" fill="currentColor" class="shrink-0 transition-transform duration-150"><path d="M517.85-480l-184-184L376-706.15L602.15-480L376-253.85L333.85-296l184-184Z"></path></svg>`,
     folderFallback: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 -960 960 960" fill="currentColor" class="shrink-0 text-muted-foreground"><path d="M170-180q-29.15,0-49.58-20.42T100-250V-707.69q0-29.15 21.58-50.73T172.31-780H391.92l80,80H787.69q26.85,0 46.31,17.35T856.54-640H447.38l-80-80H172.31q-5.39,0-8.85,3.46T160-707.69v455.38q0,4.23 2.12,6.92t5.58,4.62L261-552.31H927.31L830.46-229.69q-6.85,22.54-25.65,36.11T763.08-180H170Zm60.54-60H770.77l75.46-252.31H306L230.54-240Zm0,0L306-492.31L230.54-240ZM160-640v-67.69q0-5.39 0-8.85t0-3.46v80Z"></path></svg>`,
     fileFallback: `<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 text-muted-foreground"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>`,
@@ -34,7 +37,7 @@
         window.__AGY_TAG_NAV_INSTANCE__.setConfig(window.__AGY_INITIAL_PROJECT_TAGS__);
       }
       window.__AGY_TAG_NAV_INSTANCE__.refreshAll();
-      return "already_active_refreshed_v6";
+      return "already_active_refreshed_v11";
     }
     try {
       if (typeof window.__AGY_TAG_NAV_INSTANCE__._cleanupForUpgrade === "function") {
@@ -169,11 +172,12 @@
         const p = JSON.parse(raw);
         return {
           engine: p.engine === "pi" ? "pi" : "agy",
-          model: p.model || "surplus/claude-haiku-5.5"
+          model: p.model || "surplus/claude-haiku-5.5",
+          byConv: p.byConv && typeof p.byConv === "object" ? p.byConv : {}
         };
       }
     } catch (e) {}
-    return { engine: "agy", model: "surplus/claude-haiku-5.5" };
+    return { engine: "agy", model: "surplus/claude-haiku-5.5", byConv: {} };
   }
 
   let state = loadInitialConfig();
@@ -192,6 +196,21 @@
     try {
       localStorage.setItem(PI_ENGINE_STATE_KEY, JSON.stringify(piEngineState));
     } catch (e) {}
+  }
+
+  function setConvEngineState(convId, engine, model) {
+    piEngineState.engine = engine === "pi" ? "pi" : "agy";
+    if (model) piEngineState.model = model;
+    if (!piEngineState.byConv || typeof piEngineState.byConv !== "object") {
+      piEngineState.byConv = {};
+    }
+    const key = convId || "global";
+    piEngineState.byConv[key] = {
+      engine: piEngineState.engine,
+      model: piEngineState.model,
+      updatedAt: Date.now()
+    };
+    savePiEngineState();
   }
 
   function saveState() {
@@ -620,12 +639,17 @@
         padding: 0 8px;
         border-radius: 999px;
         cursor: pointer;
-        opacity: 0.68;
+        opacity: 0.72;
         transition: all 0.14s ease;
         display: inline-flex;
         align-items: center;
-        gap: 3px;
+        gap: 4px;
         white-space: nowrap;
+      }
+      .agy-engine-opt svg,
+      .agy-pi-badge svg {
+        display: block;
+        flex-shrink: 0;
       }
       .agy-engine-opt:hover {
         opacity: 1;
@@ -680,10 +704,13 @@
         color: #ffffff;
         cursor: pointer;
         white-space: nowrap;
-        transition: opacity 0.12s ease;
+        transition: opacity 0.12s ease, transform 0.1s ease, background 0.14s ease;
       }
       #agy-pi-send-btn:hover {
         opacity: 0.92;
+      }
+      #agy-pi-send-btn:active {
+        transform: scale(0.96);
       }
       .agy-pi-mode-ring {
         box-shadow: 0 0 0 1.5px rgba(124, 58, 237, 0.4) !important;
@@ -717,7 +744,55 @@
         color: #c4b5fd;
       }
 
-      /* --- Pi Conversation Stream Cards --- */
+      /* --- Pi Conversation Stream & Native Interleaved Turns --- */
+      div[data-turn-content="latest"]:has(~ .agy-pi-native-turn),
+      .flex.items-start:has(~ .agy-pi-native-turn) {
+        min-height: 0 !important;
+      }
+      .agy-pi-native-turn {
+        width: 100%;
+      }
+      .agy-pi-worked-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        width: 100%;
+        padding: 4px 8px;
+        min-height: 32px;
+        border-radius: 8px;
+        font-size: 13px;
+        user-select: none;
+      }
+      .agy-pi-engine-inline-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--muted-foreground, #6b7280);
+      }
+      .agy-pi-engine-inline-tag svg {
+        display: block;
+        flex-shrink: 0;
+      }
+      .agy-pi-md-pre {
+        margin: 6px 0;
+        padding: 10px 12px;
+        border-radius: 8px;
+        background: rgba(128, 128, 128, 0.09);
+        border: 1px solid rgba(128, 128, 128, 0.16);
+        overflow-x: auto;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 12.5px;
+        line-height: 1.5;
+      }
+      .agy-pi-md-blockquote {
+        margin: 4px 0;
+        padding: 4px 12px;
+        border-left: 3px solid rgba(128, 128, 128, 0.35);
+        opacity: 0.9;
+      }
       #agy-pi-turns-container {
         display: flex;
         flex-direction: column;
@@ -778,6 +853,7 @@
         display: flex;
         flex-wrap: wrap;
         gap: 5px;
+        padding: 2px 8px 4px 8px;
       }
       .agy-pi-tool-pill {
         display: inline-flex;
@@ -819,21 +895,26 @@
   let cachedSsp = null;
   let cachedEnf = null;
   let cachedFitp = null;
+  let cachedReduxStore = null;
+  let reduxStoreUnsubscribe = null;
 
   function findReactProviders() {
     const el = document.querySelector('[data-testid="conversation-list-sidebar"]');
     if (!el) return null;
-    if (cachedRpp && cachedPmf && cachedSsp) {
-      return { pmf: cachedPmf, rpp: cachedRpp, ssp: cachedSsp, enf: cachedEnf, fitp: cachedFitp };
+    if (cachedRpp && cachedPmf && cachedReduxStore && cachedFitp) {
+      return { pmf: cachedPmf, rpp: cachedRpp, ssp: cachedSsp, enf: cachedEnf, fitp: cachedFitp, store: cachedReduxStore };
     }
     const fiberKey = Object.keys(el).find(k => k.startsWith("__reactFiber$"));
     if (!fiberKey) return null;
     let cur = el[fiberKey];
     while (cur) {
       const v = cur.memoizedProps?.value;
-      if (v) {
+      if (v && typeof v === "object") {
         if (v.projectManagementFeature?.richProjectsProvider) {
           cachedPmf = v.projectManagementFeature;
+          cachedRpp = cachedPmf.richProjectsProvider;
+        } else if (v.core?.projectManagementService?.richProjectsProvider) {
+          cachedPmf = v.core.projectManagementService;
           cachedRpp = cachedPmf.richProjectsProvider;
         }
         if (v.sidebarSectionsProvider) {
@@ -841,16 +922,24 @@
         }
         if (v.electronNativeFeature) {
           cachedEnf = v.electronNativeFeature;
+        } else if (v.getCache instanceof Map && v.getCache.get("electronNativeFeature")) {
+          cachedEnf = v.getCache.get("electronNativeFeature");
         }
         if (v.fileIconThemeProvider) {
           cachedFitp = v.fileIconThemeProvider;
+        } else if (v.iconDefinitions && v.fileExtensions && v.folderNames) {
+          cachedFitp = { provider: { state: v } };
+        }
+        if (v.store && typeof v.store.getState === "function" && typeof v.store.dispatch === "function") {
+          cachedReduxStore = v.store;
         }
       }
       cur = cur.return;
     }
     if (!cachedRpp) return null;
     hookRichProjectsProvider(cachedPmf, cachedRpp);
-    return { pmf: cachedPmf, rpp: cachedRpp, ssp: cachedSsp, enf: cachedEnf, fitp: cachedFitp };
+    hookReduxStoreForPiMeta(cachedReduxStore);
+    return { pmf: cachedPmf, rpp: cachedRpp, ssp: cachedSsp, enf: cachedEnf, fitp: cachedFitp, store: cachedReduxStore };
   }
 
   function resolveNativeIconUrl(name, isDir) {
@@ -907,7 +996,13 @@
         }
         rpp._rawState = nextRaw;
         applyTagFilterToRpp(rpp);
+        renderTagBar();
+        setTimeout(decorateProjectCards, 40);
       };
+
+      if (state.activeTag && state.activeTag !== "all") {
+        applyTagFilterToRpp(rpp);
+      }
 
       if (pmf && typeof pmf.updateProject === "function" && !pmf.__agyUpdateGuarded) {
         pmf.__agyUpdateGuarded = true;
@@ -1045,6 +1140,25 @@
     }
 
     const convId = getCurrentConversationId();
+    if (convId && found.store) {
+      try {
+        const st = found.store.getState();
+        const pidFromMeta = st?.trajectorySummaries?.summaries?.[convId]?.trajectoryMetadata?.projectId;
+        if (pidFromMeta) {
+          const byMeta = getProjectById(pidFromMeta);
+          if (byMeta) return byMeta;
+        }
+        const secs = st?.sidebarSections?.sidebarSections;
+        if (Array.isArray(secs)) {
+          for (const sec of secs) {
+            if (Array.isArray(sec.conversations) && sec.conversations.some(c => c.conversationId === convId || c.cascadeId === convId)) {
+              const bySecUri = getProjectById(sec.uri);
+              if (bySecUri) return bySecUri;
+            }
+          }
+        }
+      } catch (e) {}
+    }
     if (convId && found.ssp) {
       if (found.ssp.conversationsByProject instanceof Map) {
         for (const [pid, convList] of found.ssp.conversationsByProject.entries()) {
@@ -1596,7 +1710,10 @@
       else inputCard.classList.remove("agy-pi-mode-ring");
     }
 
-    const sig = `${piEngineState.engine}|${piEngineState.model}`;
+    const convId = getCurrentConversationId() || "global";
+    const turns = activePiTurnsByConv.get(convId) || [];
+    const runningTurn = turns.find(t => t.running);
+    const sig = `${piEngineState.engine}|${piEngineState.model}|${runningTurn ? runningTurn.runId : "idle"}`;
     if (bar.getAttribute("data-sig") === sig) return;
     bar.setAttribute("data-sig", sig);
     bar.innerHTML = "";
@@ -1608,11 +1725,10 @@
     agyOpt.type = "button";
     agyOpt.className = "agy-engine-opt" + (!isPi ? " active-agy" : "");
     agyOpt.title = "使用本机 Antigravity (AGY) 引擎";
-    agyOpt.textContent = "AGY";
+    agyOpt.innerHTML = `${SVG_ICONS.agyLogo}<span>AGY</span>`;
     agyOpt.onclick = (e) => {
       e.stopPropagation();
-      piEngineState.engine = "agy";
-      savePiEngineState();
+      setConvEngineState(getCurrentConversationId() || "global", "agy");
       renderPiEngineBar();
     };
 
@@ -1620,11 +1736,10 @@
     piOpt.type = "button";
     piOpt.className = "agy-engine-opt" + (isPi ? " active-pi" : "");
     piOpt.title = "切换到本机 Pi 引擎（可选全部第三方模型，共享当前项目与上下文）";
-    piOpt.textContent = "Pi";
+    piOpt.innerHTML = `${SVG_ICONS.piLogo}<span>Pi</span>`;
     piOpt.onclick = async (e) => {
       e.stopPropagation();
-      piEngineState.engine = "pi";
-      savePiEngineState();
+      setConvEngineState(getCurrentConversationId() || "global", "pi");
       await loadPiModelsIfNeeded();
       renderPiEngineBar();
     };
@@ -1650,10 +1765,20 @@
       const sendBtn = document.createElement("button");
       sendBtn.type = "button";
       sendBtn.id = "agy-pi-send-btn";
-      sendBtn.title = "发送当前输入框内容给 Pi 执行 (快捷键: Enter)";
-      sendBtn.innerHTML = `<span>发送 ↵</span>`;
+      if (runningTurn) {
+        sendBtn.title = "Pi 正在运行中（点击可发送新消息，若输入框为空则停止当前运行）";
+        sendBtn.innerHTML = `<span>运行中 · 发送 ↵</span>`;
+      } else {
+        sendBtn.title = "发送当前输入框内容给 Pi 执行 (快捷键: Enter)";
+        sendBtn.innerHTML = `<span>发送 ↵</span>`;
+      }
+      // Prevent mousedown from stealing focus/selection from the Lexical editor
+      sendBtn.onmousedown = (e) => {
+        e.preventDefault();
+      };
       sendBtn.onclick = (e) => {
         e.stopPropagation();
+        e.preventDefault();
         submitPromptToPi();
       };
       bar.appendChild(sendBtn);
@@ -1715,8 +1840,7 @@
           `;
           item.onclick = (e) => {
             e.stopPropagation();
-            piEngineState.model = m.fullId;
-            savePiEngineState();
+            setConvEngineState(getCurrentConversationId() || "global", piEngineState.engine, m.fullId);
             closePiModelPopover();
             renderPiEngineBar();
           };
@@ -1737,136 +1861,859 @@
     setTimeout(() => searchInput.focus(), 20);
   }
 
+  function findActiveChatEditorElement() {
+    const editors = Array.from(document.querySelectorAll('[data-lexical-editor="true"]'));
+    if (editors.length === 0) return null;
+    if (editors.length === 1) return editors[0];
+    // Prefer the editor closest to #agy-pi-engine-bar or model-selector-trigger
+    const trigger = document.querySelector('[data-testid="model-selector-trigger"]');
+    let footer = trigger;
+    while (footer && !footer.className?.includes?.("input-footer")) {
+      footer = footer.parentElement;
+    }
+    const card = footer?.parentElement;
+    const inCard = card?.querySelector?.('[data-lexical-editor="true"]');
+    return inCard || editors[editors.length - 1];
+  }
+
   function readAndClearChatInput() {
-    const edEl = document.querySelector('[data-lexical-editor="true"]');
+    const edEl = findActiveChatEditorElement();
     if (!edEl) return "";
-    const text = (edEl.__lexicalTextContent ?? edEl.innerText ?? "").trim();
+
+    let text = "";
+    const lex = edEl.__lexicalEditor;
+    if (lex && typeof lex.getEditorState === "function") {
+      try {
+        lex.getEditorState().read(() => {
+          const rootNode = lex._editorState?._nodeMap?.get("root");
+          if (rootNode && typeof rootNode.getTextContent === "function") {
+            text = rootNode.getTextContent();
+          }
+        });
+      } catch (e) {}
+    }
+
+    if (!text) {
+      text = edEl.__lexicalTextContent || edEl.innerText || edEl.textContent || "";
+    }
+    text = text.trim();
     if (!text) return "";
 
-    try {
-      edEl.focus();
-      document.execCommand("selectAll", false, null);
-      document.execCommand("delete", false, null);
-    } catch (e) {}
+    // 1. Reliably clear via Lexical's discrete synchronous state update
+    let clearedByLexical = false;
+    if (lex && typeof lex.update === "function") {
+      try {
+        lex.update(() => {
+          const root = lex._pendingEditorState?._nodeMap?.get("root");
+          if (root && typeof root.clear === "function") {
+            root.clear();
+            clearedByLexical = true;
+          }
+        }, { discrete: true });
+      } catch (e) {}
+    }
+
+    // 2. Fallback DOM selection clear if needed
+    if (!clearedByLexical) {
+      try {
+        edEl.focus();
+        const sel = window.getSelection();
+        if (sel) {
+          sel.selectAllChildren(edEl);
+          document.execCommand("delete", false, null);
+        }
+      } catch (e) {}
+    }
+
     return text;
   }
 
-  // --- Pi Turns Rendering in Conversation Stream ---
+  // --- Pi Turns Chronological Native Interleaving & Shared Context ---
   const activePiTurnsByConv = new Map();
+  const lastSyncedPiTsByConv = new Map();
+  const piConvMetaByConv = new Map();
   let loadedConvIdForPi = null;
+  let isDispatchingPiReduxSync = false;
 
-  function findConversationStreamContainer() {
+  function formatSidebarShortTime(ms) {
+    if (!ms) return "now";
+    const diffSec = Math.max(0, Math.floor((Date.now() - ms) / 1000));
+    if (diffSec < 60) return "now";
+    const diffMin = Math.floor(diffSec / 60);
+    if (diffMin < 60) return `${diffMin}m`;
+    const diffHr = Math.floor(diffMin / 60);
+    if (diffHr <= 24) return `${diffHr}h`;
+    const diffDay = Math.floor(diffHr / 24);
+    if (diffDay < 30) return `${diffDay}d`;
+    if (diffDay < 365) return `${Math.floor(diffDay / 30)}mo`;
+    return `${Math.floor(diffDay / 365)}y`;
+  }
+
+  function hookReduxStoreForPiMeta(store) {
+    if (!store || reduxStoreUnsubscribe || typeof store.subscribe !== "function") return;
+    try {
+      reduxStoreUnsubscribe = store.subscribe(() => {
+        if (isDispatchingPiReduxSync) return;
+        syncPiMetaToReduxStore(false);
+      });
+    } catch (e) {}
+  }
+
+  function syncPiMetaToReduxStore(shouldDispatch = true) {
+    if (isDispatchingPiReduxSync) return;
+    if (!cachedReduxStore) {
+      findReactProviders();
+    }
+    const store = cachedReduxStore;
+    if (!store || typeof store.getState !== "function") return;
+    const st = store.getState();
+    const origTs = st?.trajectorySummaries;
+    if (!origTs || !origTs.summaries) return;
+
+    let changed = false;
+    let nextSummaries = origTs.summaries;
+    let nextActive = origTs.indexes?.active || {};
+    let activeChanged = false;
+
+    for (const [convId, meta] of piConvMetaByConv.entries()) {
+      if (!convId || convId === "global") continue;
+      const sum = nextSummaries[convId];
+      if (!sum) continue;
+
+      const origAgySec = Number(sum.__agyOrigModSec ?? sum.lastModifiedTime?.seconds ?? 0);
+      const curModSec = Number(sum.lastModifiedTime?.seconds || 0);
+      const piSec = Math.floor(Number(meta.lastTimestamp || 0) / 1000);
+      const isPiRunning = Boolean(meta.running);
+
+      const needsTimeSync = piSec > 0 && piSec > curModSec && piSec >= origAgySec;
+      const needsRunStart = isPiRunning && (sum.status !== 2 || !nextActive[convId]);
+      const needsRunEnd = !isPiRunning && Boolean(sum.__agyPiRunningOverride);
+
+      if (!needsTimeSync && !needsRunStart && !needsRunEnd) continue;
+
+      if (!changed) {
+        nextSummaries = { ...origTs.summaries };
+        changed = true;
+      }
+
+      const updatedSum = {
+        ...sum,
+        __agyOrigModSec: origAgySec
+      };
+
+      if (piSec > 0 && piSec >= origAgySec && piSec >= curModSec) {
+        const tsBig = BigInt(piSec);
+        const viewBig = BigInt(piSec + 1);
+        updatedSum.lastModifiedTime = {
+          ...(sum.lastModifiedTime || { $typeName: "google.protobuf.Timestamp" }),
+          seconds: tsBig,
+          nanos: 0
+        };
+        updatedSum.lastUserInputTime = {
+          ...(sum.lastUserInputTime || sum.lastModifiedTime || { $typeName: "google.protobuf.Timestamp" }),
+          seconds: tsBig,
+          nanos: 0
+        };
+        const curViewSec = Number(sum.annotations?.lastUserViewTime?.seconds || 0);
+        if (curViewSec <= piSec) {
+          updatedSum.annotations = {
+            ...(sum.annotations || { $typeName: "exa.jetski_cortex_pb.ConversationAnnotations", tags: [], cls: [] }),
+            lastUserViewTime: {
+              $typeName: "google.protobuf.Timestamp",
+              seconds: viewBig,
+              nanos: 0
+            }
+          };
+        }
+      }
+
+      if (isPiRunning) {
+        updatedSum.status = 2;
+        updatedSum.notFullyIdle = true;
+        updatedSum.__agyPiRunningOverride = true;
+        if (!nextActive[convId]) {
+          if (!activeChanged) {
+            nextActive = { ...nextActive };
+            activeChanged = true;
+          }
+          nextActive[convId] = true;
+        }
+      } else if (sum.__agyPiRunningOverride) {
+        updatedSum.status = 1;
+        updatedSum.notFullyIdle = false;
+        updatedSum.__agyPiRunningOverride = false;
+        if (nextActive[convId]) {
+          if (!activeChanged) {
+            nextActive = { ...nextActive };
+            activeChanged = true;
+          }
+          delete nextActive[convId];
+        }
+      }
+
+      nextSummaries[convId] = updatedSum;
+    }
+
+    if (changed || activeChanged) {
+      isDispatchingPiReduxSync = true;
+      try {
+        st.trajectorySummaries = {
+          ...origTs,
+          indexes: activeChanged
+            ? { ...(origTs.indexes || {}), active: nextActive }
+            : origTs.indexes,
+          summaries: nextSummaries
+        };
+        if (shouldDispatch && typeof store.dispatch === "function") {
+          store.dispatch({ type: "@@AGY_PI_SYNC_SUMMARY" });
+        }
+      } catch (e) {} finally {
+        isDispatchingPiReduxSync = false;
+      }
+    }
+  }
+
+  function decorateSidebarConversationRows() {
+    const rows = document.querySelectorAll('[data-testid="conversation-row-sidebar"][data-cascade-id]');
+    if (!rows.length) return;
+    const summaries = cachedReduxStore?.getState?.()?.trajectorySummaries?.summaries || {};
+
+    rows.forEach(row => {
+      const cid = row.getAttribute("data-cascade-id");
+      if (!cid) return;
+      const meta = piConvMetaByConv.get(cid);
+      if (!meta) return;
+
+      const slot = row.querySelector(".flex.items-center.gap-1\\.5.group-hover\\:opacity-0");
+      if (!slot) return;
+
+      if (meta.running) {
+        if (!slot.querySelector('[data-testid="status-loading-spinner"]')) {
+          slot.setAttribute("data-agy-pi-spinner", "1");
+          slot.innerHTML = SVG_ICONS.statusSpinner;
+        }
+        return;
+      }
+
+      const sum = summaries[cid];
+      const isAgyNativelyRunning = sum && sum.status === 2 && !sum.__agyPiRunningOverride;
+      if (isAgyNativelyRunning) return;
+
+      if (meta.lastTimestamp > 0) {
+        const origAgySec = Number(sum?.__agyOrigModSec ?? sum?.lastModifiedTime?.seconds ?? 0);
+        const piSec = Math.floor(meta.lastTimestamp / 1000);
+        if (piSec >= origAgySec) {
+          const shortTime = formatSidebarShortTime(meta.lastTimestamp);
+          const hasPiSpinner =
+            slot.getAttribute("data-agy-pi-spinner") === "1" ||
+            Boolean(slot.querySelector('[data-testid="status-loading-spinner"]'));
+          const volatileEl = slot.querySelector('[data-screenshot-volatile="true"]');
+          if (hasPiSpinner || !volatileEl) {
+            slot.removeAttribute("data-agy-pi-spinner");
+            slot.innerHTML = `<span data-screenshot-volatile="true" class="text-xs text-foreground opacity-60 min-w-4">${escapeHtml(shortTime)}</span>`;
+          } else if (volatileEl.textContent !== shortTime) {
+            volatileEl.textContent = shortTime;
+          }
+        }
+      }
+    });
+  }
+
+  function syncPiStatusToReduxAndSidebar() {
+    syncPiMetaToReduxStore(true);
+    decorateSidebarConversationRows();
+  }
+
+  function updatePiConvMetaFromTurns(convId, turns) {
+    if (!convId || convId === "global" || !Array.isArray(turns) || turns.length === 0) return;
+    let lastTimestamp = 0;
+    let lastModel = null;
+    let running = false;
+    for (const t of turns) {
+      if (!t) continue;
+      if (t.running) running = true;
+      const ts = Math.max(Number(t.completedAt) || 0, getPiTurnStartMs(t));
+      if (ts >= lastTimestamp) {
+        lastTimestamp = ts;
+        if (t.model) lastModel = t.model;
+      }
+    }
+    if (lastTimestamp > 0 || running) {
+      const prev = piConvMetaByConv.get(convId) || {};
+      piConvMetaByConv.set(convId, {
+        lastTimestamp: Math.max(prev.lastTimestamp || 0, lastTimestamp),
+        running,
+        lastModel: lastModel || prev.lastModel || null
+      });
+      syncPiStatusToReduxAndSidebar();
+    }
+  }
+
+  async function loadPiConvMeta() {
+    try {
+      const metaObj = await callBridge("getPiConvMeta");
+      if (metaObj && typeof metaObj === "object") {
+        for (const [cid, m] of Object.entries(metaObj)) {
+          if (!cid || !m) continue;
+          const prev = piConvMetaByConv.get(cid) || {};
+          piConvMetaByConv.set(cid, {
+            lastTimestamp: Math.max(prev.lastTimestamp || 0, Number(m.lastTimestamp) || 0),
+            running: Boolean(m.running || prev.running),
+            lastModel: m.lastModel || prev.lastModel || null
+          });
+        }
+        syncPiStatusToReduxAndSidebar();
+        const curConvId = getCurrentConversationId();
+        if (curConvId) {
+          syncEngineStateForConv(curConvId);
+        }
+      }
+    } catch (e) {}
+  }
+
+  function getPiTurnStartMs(t) {
+    if (!t) return 0;
+    if (t.startedAt && Number(t.startedAt) > 0) return Number(t.startedAt);
+    const m = String(t.turnId || "").match(/^pi_turn_(\d+)$/);
+    if (m) return parseInt(m[1], 10);
+    return Number(t.timestamp) || 0;
+  }
+
+  function getAgyTurnTimestampMs(turnEl) {
+    if (!turnEl) return 0;
+    if (turnEl.__agyCachedTs) return turnEl.__agyCachedTs;
+    try {
+      const fk = Object.keys(turnEl).find(k => k.startsWith("__reactFiber$"));
+      let cur = fk ? turnEl[fk] : null;
+      for (let i = 0; i < 7 && cur; i++) {
+        const c = cur.memoizedProps?.container;
+        const createdAt = c?.steps?.[0]?.metadata?.createdAt;
+        if (createdAt && createdAt.seconds !== undefined) {
+          const sec = Number(createdAt.seconds);
+          const nanos = Number(createdAt.nanos || 0);
+          if (sec > 0) {
+            const ms = sec * 1000 + Math.round(nanos / 1e6);
+            turnEl.__agyCachedTs = ms;
+            return ms;
+          }
+        }
+        cur = cur.return;
+      }
+    } catch (e) {}
+    return 0;
+  }
+
+  function getNativeConversationTurnList() {
+    const vp = document.querySelector('[data-testid="autoscroll-viewport"]');
+    if (!vp) return null;
+    const srHeading = vp.querySelector("h1.sr-only");
+    if (srHeading && srHeading.parentElement) {
+      return { scrollArea: vp, turnList: srHeading.parentElement };
+    }
+    const fallbackList = vp.querySelector(".flex.flex-col.gap-y-3");
+    if (fallbackList) {
+      return { scrollArea: vp, turnList: fallbackList };
+    }
+    return null;
+  }
+
+  function stripHiddenPiContextInUserBubbles() {
+    const bubbles = document.querySelectorAll('[data-testid="user-input-step"] [data-quotable="true"]');
+    bubbles.forEach(el => {
+      const raw = el.textContent || "";
+      if (!raw.includes("<PI_SHARED_CONTEXT>") && !raw.includes("[系统上下文同步：")) return;
+      const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null);
+      let node;
+      while ((node = walker.nextNode())) {
+        if (
+          node.nodeValue &&
+          (node.nodeValue.includes("<PI_SHARED_CONTEXT>") || node.nodeValue.includes("[系统上下文同步："))
+        ) {
+          node.nodeValue = node.nodeValue
+            .replace(/\s*<PI_SHARED_CONTEXT>[\s\S]*?<\/PI_SHARED_CONTEXT>/g, "")
+            .replace(/\s*\[系统上下文同步：[\s\S]*?\]/g, "");
+        }
+      }
+    });
+  }
+
+  function extractAgyDomTurns() {
+    const native = getNativeConversationTurnList();
+    if (!native) return [];
+    const { turnList } = native;
+    const agyEls = Array.from(turnList.children).filter(
+      el => el.tagName === "DIV" && !el.classList.contains("agy-pi-native-turn")
+    );
+    const results = [];
+    for (const el of agyEls) {
+      const ts = getAgyTurnTimestampMs(el);
+      const userEl = el.querySelector('[data-testid="user-input-step"] [data-quotable="true"]');
+      const agentEl = el.querySelector('[role="article"][aria-label="Agent response"] .leading-relaxed');
+      const prompt = (userEl?.innerText || userEl?.textContent || "")
+        .replace(/\s*<PI_SHARED_CONTEXT>[\s\S]*?<\/PI_SHARED_CONTEXT>/g, "")
+        .replace(/\s*\[系统上下文同步：[\s\S]*?\]/g, "")
+        .trim();
+      const response = (agentEl?.innerText || agentEl?.textContent || "").trim();
+      if (prompt) {
+        results.push({ ts, prompt, response });
+      }
+    }
+    return results;
+  }
+
+  function formatInlineMarkdown(escapedLine) {
+    return escapedLine
+      .replace(/`([^`]+)`/g, '<code class="whitespace-pre-wrap" style="word-break: break-word;">$1</code>')
+      .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+  }
+
+  function renderSimpleMarkdown(rawText) {
+    if (!rawText) return "";
+    const segments = String(rawText).split(/(```[\s\S]*?```)/g);
+    const htmlParts = [];
+
+    for (const seg of segments) {
+      if (seg.startsWith("```") && seg.endsWith("```")) {
+        const lines = seg.slice(3, -3).replace(/^\r?\n/, "");
+        const firstNewline = lines.indexOf("\n");
+        const codeBody = firstNewline >= 0 && !lines.slice(0, firstNewline).includes(" ")
+          ? lines.slice(firstNewline + 1)
+          : lines;
+        htmlParts.push(`<pre class="agy-pi-md-pre"><code>${escapeHtml(codeBody)}</code></pre>`);
+        continue;
+      }
+
+      const blocks = seg.trim().split(/\n{2,}/);
+      for (const blk of blocks) {
+        const trimmed = blk.trim();
+        if (!trimmed) continue;
+        const lines = trimmed.split(/\r?\n/);
+
+        if (lines.every(l => /^>\s?/.test(l))) {
+          const inner = lines.map(l => formatInlineMarkdown(escapeHtml(l.replace(/^>\s?/, "")))).join("<br>");
+          htmlParts.push(`<blockquote class="agy-pi-md-blockquote"><p>${inner}</p></blockquote>`);
+        } else if (lines.length === 1 && /^#{1,4}\s+/.test(lines[0])) {
+          const m = lines[0].match(/^(#{1,4})\s+(.*)$/);
+          const lvl = Math.min(4, m[1].length);
+          htmlParts.push(`<h${lvl}>${formatInlineMarkdown(escapeHtml(m[2]))}</h${lvl}>`);
+        } else if (lines.every(l => /^[-*]\s+/.test(l))) {
+          const items = lines
+            .map(l => `<li>${formatInlineMarkdown(escapeHtml(l.replace(/^[-*]\s+/, "")))}</li>`)
+            .join("");
+          htmlParts.push(`<ul>${items}</ul>`);
+        } else {
+          const pInner = lines.map(l => formatInlineMarkdown(escapeHtml(l))).join("<br>");
+          htmlParts.push(`<p>${pInner}</p>`);
+        }
+      }
+    }
+
+    return htmlParts.join("");
+  }
+
+  function formatTurnClockTime(ms) {
+    if (!ms) return "";
+    const d = new Date(ms);
+    return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+  }
+
+  function formatRelativeTimeAgo(ms) {
+    if (!ms) return "just now";
+    const diffSec = Math.max(0, Math.floor((Date.now() - ms) / 1000));
+    if (diffSec < 45) return "just now";
+    const diffMin = Math.floor(diffSec / 60);
+    if (diffMin < 60) return `${diffMin}m ago`;
+    const diffHr = Math.floor(diffMin / 60);
+    if (diffHr < 24) return `${diffHr}h ago`;
+    return `${Math.floor(diffHr / 24)}d ago`;
+  }
+
+  function buildNativePiTurnElement(t, existingEl) {
+    const turnEl = existingEl || document.createElement("div");
+    turnEl.className = "flex items-start agy-pi-native-turn";
+    turnEl.setAttribute("data-pi-turn-id", t.turnId);
+    const startMs = getPiTurnStartMs(t);
+    turnEl.setAttribute("data-pi-ts", String(startMs));
+
+    const toolsCount = Array.isArray(t.tools) ? t.tools.length : 0;
+    const respText = t.response || "";
+    const sig = `${t.running ? 1 : 0}:${toolsCount}:${respText.length}:${t.model || ""}`;
+    if (turnEl.getAttribute("data-pi-sig") === sig) {
+      return turnEl;
+    }
+    turnEl.setAttribute("data-pi-sig", sig);
+
+    const shortModel = (t.model || "claude-haiku-5.5").split("/").pop();
+    const clockTime = formatTurnClockTime(startMs);
+    const relTime = formatRelativeTimeAgo(t.completedAt || startMs);
+    const durationSec = t.completedAt && startMs && t.completedAt > startMs
+      ? Math.max(1, Math.round((t.completedAt - startMs) / 1000))
+      : null;
+
+    const statusLabel = t.running
+      ? `Thinking${toolsCount > 0 ? ` · ${toolsCount} tool${toolsCount > 1 ? "s" : ""}` : "..."}`
+      : durationSec
+        ? `Worked for ${durationSec}s${toolsCount > 0 ? ` · ${toolsCount} tool${toolsCount > 1 ? "s" : ""}` : ""}`
+        : `Completed${toolsCount > 0 ? ` · ${toolsCount} tool${toolsCount > 1 ? "s" : ""}` : ""}`;
+
+    const toolsHtml = toolsCount > 0
+      ? `<div class="agy-pi-tools-list">${t.tools
+          .map(tl => `<span class="agy-pi-tool-pill">${escapeHtml(tl.name)}: ${escapeHtml(tl.summary || "")}</span>`)
+          .join("")}</div>`
+      : "";
+
+    const renderedBody = respText
+      ? renderSimpleMarkdown(respText)
+      : `<p class="text-muted-foreground">${t.running ? "Pi 正在思考并处理上下文..." : ""}</p>`;
+
+    turnEl.innerHTML = `
+      <div class="flex flex-col gap-0.5 w-full scroll-mt-4">
+        <div role="article" aria-label="User message" class="sticky top-0 z-10 mb-4">
+          <div class="relative bg-background md-sticky-message-bleed after:content-[''] after:absolute after:left-0 after:right-0 after:top-full after:h-7 after:bg-gradient-to-b after:from-background after:to-transparent after:pointer-events-none">
+            <div class="flex w-full flex-row">
+              <div class="flex min-w-0 grow flex-col">
+                <div data-testid="user-input-step" class="flex flex-col w-full gap-2 group/user-input-step pt-4">
+                  <div class="w-full">
+                    <div data-testid="lifted-context-menu-trigger" class="relative p-px rounded-xl bg-card-border">
+                      <div class="relative flex flex-row items-center gap-2 p-1.5 rounded-[calc(theme(borderRadius.xl)-1px)] bg-card overflow-hidden">
+                        <div class="flex-1 p-0.5 max-h-[10vh] overflow-hidden">
+                          <div data-quotable="true" class="whitespace-pre-wrap text-sm" style="word-break: break-word;">${escapeHtml(t.prompt || "")}</div>
+                        </div>
+                        <div class="absolute bottom-0.5 right-0.5 flex flex-row items-center p-1 rounded-full opacity-0 pointer-events-none group-hover/user-input-step:opacity-100 group-hover/user-input-step:pointer-events-auto transition-all bg-card user-input-buttons-shadow user-input-buttons-container select-none">
+                          <span class="text-xs text-muted-foreground mr-2 self-center">${escapeHtml(clockTime)}</span>
+                          <button type="button" aria-label="Copy" class="agy-pi-copy-user-btn text-muted-foreground hover:text-secondary-foreground transition-opacity pointer-events-auto p-1 cursor-pointer">
+                            ${SVG_ICONS.copy}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div role="article" aria-label="Agent response" data-quotable="true">
+          <div class="relative agy-pi-worked-row">
+            <div class="agy-pi-engine-inline-tag">
+              ${SVG_ICONS.piLogo}
+              <span>Pi · ${escapeHtml(shortModel)}</span>
+              <span style="opacity:0.45">·</span>
+              <span>${escapeHtml(statusLabel)}</span>
+            </div>
+            ${t.running && t.runId ? `<button type="button" class="agy-pi-stop-btn">停止</button>` : ""}
+          </div>
+          ${toolsHtml}
+          <div class="px-2 py-1">
+            <div class="leading-relaxed select-text text-sm flex flex-col [&_strong]:font-semibold [&_b]:font-semibold [&_code:not(pre_code)]:bg-muted [&_code:not(pre_code)]:text-code [&_code:not(pre_code)]:rounded [&_code:not(pre_code)]:px-1 [&_code:not(pre_code)]:py-0.5 [&_code:not(pre_code)]:text-[0.9em] [&_h1]:text-xl [&_h2]:text-lg [&_h3]:text-base [&_h4]:text-sm [&_h1]:font-semibold [&_h2]:font-semibold [&_h3]:font-medium [&_h4]:font-medium [&_ul]:my-2 [&_ol]:my-2 [&_ul]:pl-4 [&_ol]:pl-4 [&_ul]:list-disc [&_ol]:list-decimal break-words gap-2">
+              ${renderedBody}
+            </div>
+          </div>
+          <div class="pt-3">
+            <div class="flex flex-col gap-2" data-testid="cascade-system-message-toolbar">
+              <div class="flex w-full flex-wrap items-center justify-between gap-x-1 gap-y-0.5 pl-2 pr-1">
+                <div class="flex min-w-0 flex-wrap-reverse items-center justify-end gap-x-1 gap-y-0.5 ml-auto">
+                  <span class="text-xs text-muted-foreground select-none px-1 whitespace-nowrap">${escapeHtml(relTime)}</span>
+                  <div class="flex shrink-0 items-center">
+                    <button type="button" aria-label="Copy" class="agy-pi-copy-resp-btn inline-flex items-center font-medium transition-colors select-none outline-none cursor-pointer justify-center bg-transparent text-muted-foreground hover:text-foreground hover:bg-secondary h-6 w-6 shrink-0 rounded-md">
+                      ${SVG_ICONS.copy}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    const stopBtn = turnEl.querySelector(".agy-pi-stop-btn");
+    if (stopBtn && t.runId) {
+      stopBtn.onclick = () => callBridge("stopPiRun", { runId: t.runId });
+    }
+    const copyUserBtn = turnEl.querySelector(".agy-pi-copy-user-btn");
+    if (copyUserBtn) {
+      copyUserBtn.onclick = () => navigator.clipboard?.writeText?.(t.prompt || "");
+    }
+    const copyRespBtn = turnEl.querySelector(".agy-pi-copy-resp-btn");
+    if (copyRespBtn) {
+      copyRespBtn.onclick = () => navigator.clipboard?.writeText?.(t.response || "");
+    }
+
+    return turnEl;
+  }
+
+  function findFallbackHomeContainer() {
+    const convView = document.querySelector('[data-testid="conversation-view"]');
     const trigger = document.querySelector('[data-testid="model-selector-trigger"]');
-    let cur = trigger;
-    for (let i = 0; i < 14 && cur; i++) {
-      cur = cur.parentElement;
+    if (convView && trigger && convView.contains(trigger)) {
+      let inputTopBlock = trigger;
+      while (inputTopBlock && inputTopBlock.parentElement !== convView) {
+        inputTopBlock = inputTopBlock.parentElement;
+      }
+      let container = document.getElementById("agy-pi-turns-container");
+      if (!container) {
+        container = document.createElement("div");
+        container.id = "agy-pi-turns-container";
+      }
+      container.style.maxHeight = "56vh";
+      container.style.overflowY = "auto";
+      if (inputTopBlock && container.nextSibling !== inputTopBlock) {
+        convView.insertBefore(container, inputTopBlock);
+      } else if (!inputTopBlock && container.parentElement !== convView) {
+        convView.appendChild(container);
+      }
+      return container;
     }
-    const msgWrapper = cur?.previousElementSibling;
-    if (!msgWrapper) return null;
-    const scrollArea = msgWrapper.querySelector(".overflow-y-auto");
-    if (!scrollArea) return null;
-    let container = document.getElementById("agy-pi-turns-container");
-    if (!container) {
-      container = document.createElement("div");
-      container.id = "agy-pi-turns-container";
-      scrollArea.appendChild(container);
-    } else if (container.parentElement !== scrollArea) {
-      scrollArea.appendChild(container);
+    return null;
+  }
+
+  let lastEngineSyncKey = "";
+
+  function syncEngineStateForConv(convId) {
+    const key = convId || "global";
+    const turns = activePiTurnsByConv.get(key) || [];
+    const meta = piConvMetaByConv.get(key);
+    let maxPiTs = Number(meta?.lastTimestamp) || 0;
+    let lastPiModel = meta?.lastModel || null;
+    for (const pt of turns) {
+      const ts = Math.max(Number(pt.completedAt) || 0, getPiTurnStartMs(pt));
+      if (ts >= maxPiTs) {
+        maxPiTs = ts;
+        if (pt.model) lastPiModel = pt.model;
+      }
     }
-    return { scrollArea, container };
+
+    let maxAgyTs = 0;
+    let agyCount = 0;
+    const native = getNativeConversationTurnList();
+    if (native && native.turnList) {
+      for (const child of native.turnList.children) {
+        if (child.tagName === "DIV" && !child.classList.contains("agy-pi-native-turn")) {
+          agyCount++;
+          const ts = getAgyTurnTimestampMs(child);
+          if (ts > maxAgyTs) maxAgyTs = ts;
+        }
+      }
+    }
+    if (maxAgyTs === 0 && key !== "global") {
+      const sum = cachedReduxStore?.getState?.()?.trajectorySummaries?.summaries?.[key];
+      if (sum) {
+        const origSec = sum.__agyOrigModSec !== undefined
+          ? Number(sum.__agyOrigModSec)
+          : Number(sum.lastModifiedTime?.seconds || 0);
+        if (origSec > 0 && (!maxPiTs || Math.abs(origSec - Math.floor(maxPiTs / 1000)) > 2)) {
+          maxAgyTs = origSec * 1000;
+        }
+      }
+    }
+
+    const savedEntry = piEngineState.byConv?.[key];
+    let targetEngine = "agy";
+    let targetModel = piEngineState.model || "surplus/claude-haiku-5.5";
+
+    if (savedEntry && (savedEntry.updatedAt || 0) >= Math.max(maxAgyTs, maxPiTs)) {
+      targetEngine = savedEntry.engine === "pi" ? "pi" : "agy";
+      if (savedEntry.model) targetModel = savedEntry.model;
+    } else if (maxPiTs > 0 && maxPiTs > maxAgyTs) {
+      targetEngine = "pi";
+      if (lastPiModel) targetModel = lastPiModel;
+    } else if ((turns.length > 0 || maxPiTs > 0) && agyCount === 0 && maxAgyTs === 0) {
+      targetEngine = "pi";
+      if (lastPiModel) targetModel = lastPiModel;
+    } else {
+      targetEngine = "agy";
+      if (savedEntry?.model) targetModel = savedEntry.model;
+      else if (lastPiModel) targetModel = lastPiModel;
+    }
+
+    if (piEngineState.engine !== targetEngine || piEngineState.model !== targetModel) {
+      piEngineState.engine = targetEngine;
+      piEngineState.model = targetModel;
+      savePiEngineState();
+      renderPiEngineBar();
+    }
   }
 
   async function ensurePiTurnsLoadedForCurrentConv() {
     const convId = getCurrentConversationId() || "global";
+    syncEngineStateForConv(convId);
     if (loadedConvIdForPi === convId && activePiTurnsByConv.has(convId)) {
-      renderPiTurnsInDom();
+      renderPiTurnsInDom(false);
       return;
     }
     loadedConvIdForPi = convId;
     try {
       const saved = await callBridge("getPiTurns", { conversationId: convId });
-      activePiTurnsByConv.set(convId, Array.isArray(saved) ? saved : []);
-      renderPiTurnsInDom();
+      const turns = Array.isArray(saved) ? saved : [];
+      activePiTurnsByConv.set(convId, turns);
+      updatePiConvMetaFromTurns(convId, turns);
+      syncEngineStateForConv(convId);
+      renderPiTurnsInDom(false);
     } catch (e) {}
   }
 
   function renderPiTurnsInDom(autoScroll = false) {
-    const found = findConversationStreamContainer();
-    if (!found) return;
-    const { scrollArea, container } = found;
     const convId = getCurrentConversationId() || "global";
     const turns = activePiTurnsByConv.get(convId) || [];
+    const native = getNativeConversationTurnList();
+    const agyCount = native && native.turnList
+      ? Array.from(native.turnList.children).filter(
+          el => el.tagName === "DIV" && !el.classList.contains("agy-pi-native-turn")
+        ).length
+      : 0;
+    const syncKey = `${convId}:${agyCount}:${turns.length}`;
+    if (syncKey !== lastEngineSyncKey) {
+      lastEngineSyncKey = syncKey;
+      syncEngineStateForConv(convId);
+    }
 
-    if (turns.length === 0) {
-      container.style.display = "none";
-      container.innerHTML = "";
+    renderPiEngineBar();
+    stripHiddenPiContextInUserBubbles();
+
+    // Case 1: Active conversation stream exists -> interleave Pi turns chronologically inside turnList!
+    if (native && native.turnList) {
+      const legacyBox = document.getElementById("agy-pi-turns-container");
+      if (legacyBox) legacyBox.remove();
+
+      const { scrollArea, turnList } = native;
+      const validIds = new Set(turns.map(t => t.turnId));
+
+      // Remove stale Pi turn elements from other conversations
+      turnList.querySelectorAll(".agy-pi-native-turn").forEach(el => {
+        if (!validIds.has(el.getAttribute("data-pi-turn-id"))) {
+          el.remove();
+        }
+      });
+
+      if (turns.length === 0) return;
+
+      const sortedTurns = [...turns].sort((a, b) => getPiTurnStartMs(a) - getPiTurnStartMs(b));
+
+      // Place turns from newest to oldest so refNode lookup is always deterministic and idempotent
+      for (let i = sortedTurns.length - 1; i >= 0; i--) {
+        const t = sortedTurns[i];
+        const startMs = getPiTurnStartMs(t);
+        const existingEl = turnList.querySelector(`.agy-pi-native-turn[data-pi-turn-id="${t.turnId}"]`);
+        const turnEl = buildNativePiTurnElement(t, existingEl);
+
+        // Find the first turn child in turnList (native AGY turn or newer Pi turn) whose timestamp > startMs
+        const children = Array.from(turnList.children).filter(
+          el => el.tagName === "DIV" && el !== turnEl
+        );
+        let refNode = null;
+        for (const child of children) {
+          const childTs = child.classList.contains("agy-pi-native-turn")
+            ? Number(child.getAttribute("data-pi-ts") || 0)
+            : getAgyTurnTimestampMs(child);
+          if (childTs > startMs) {
+            refNode = child;
+            break;
+          }
+        }
+
+        if (refNode) {
+          if (turnEl.parentElement !== turnList || turnEl.nextElementSibling !== refNode) {
+            turnList.insertBefore(turnEl, refNode);
+          }
+        } else {
+          if (turnEl.parentElement !== turnList || turnList.lastElementChild !== turnEl) {
+            turnList.appendChild(turnEl);
+          }
+        }
+      }
+
+      if (autoScroll) {
+        scrollArea.scrollTop = scrollArea.scrollHeight;
+      }
       return;
     }
 
-    container.style.display = "flex";
-    container.innerHTML = "";
-
-    for (const t of turns) {
-      const card = document.createElement("div");
-      card.className = "agy-pi-turn-card";
-
-      const userBubble = document.createElement("div");
-      userBubble.className = "agy-pi-user-bubble";
-      userBubble.textContent = t.prompt;
-      card.appendChild(userBubble);
-
-      const header = document.createElement("div");
-      header.className = "agy-pi-assistant-header";
-
-      const leftInfo = document.createElement("div");
-      leftInfo.style.display = "flex";
-      leftInfo.style.alignItems = "center";
-      leftInfo.style.gap = "8px";
-      leftInfo.innerHTML = `
-        <span class="agy-pi-badge">Pi · ${escapeHtml(t.model || "claude-haiku-5.5")}</span>
-        <span class="agy-pi-ctx-pill">${escapeHtml((t.projectPath || "").split("/").filter(Boolean).pop() || "项目目录")} · 已共享上下文</span>
-      `;
-      header.appendChild(leftInfo);
-
-      if (t.running && t.runId) {
-        const stopBtn = document.createElement("button");
-        stopBtn.type = "button";
-        stopBtn.className = "agy-pi-stop-btn";
-        stopBtn.textContent = "停止";
-        stopBtn.onclick = () => {
-          callBridge("stopPiRun", { runId: t.runId });
-        };
-        header.appendChild(stopBtn);
-      }
-
-      card.appendChild(header);
-
-      if (Array.isArray(t.tools) && t.tools.length > 0) {
-        const toolsBox = document.createElement("div");
-        toolsBox.className = "agy-pi-tools-list";
-        for (const tl of t.tools) {
-          const pill = document.createElement("span");
-          pill.className = "agy-pi-tool-pill";
-          pill.textContent = `${tl.name}: ${tl.summary || ""}`;
-          toolsBox.appendChild(pill);
-        }
-        card.appendChild(toolsBox);
-      }
-
-      const body = document.createElement("div");
-      body.className = "agy-pi-response-body";
-      body.textContent = t.response || (t.running ? "Pi 正在处理项目文件..." : "");
-      card.appendChild(body);
-
-      container.appendChild(card);
+    // Case 2: Fallback for Project Home / New Conversation screen where no native turnList exists yet
+    const fallbackBox = findFallbackHomeContainer();
+    if (!fallbackBox) return;
+    if (turns.length === 0) {
+      fallbackBox.style.display = "none";
+      fallbackBox.innerHTML = "";
+      return;
     }
-
+    fallbackBox.style.display = "flex";
+    fallbackBox.innerHTML = "";
+    for (const t of turns) {
+      fallbackBox.appendChild(buildNativePiTurnElement(t, null));
+    }
     if (autoScroll) {
-      scrollArea.scrollTop = scrollArea.scrollHeight;
+      fallbackBox.scrollTop = fallbackBox.scrollHeight;
     }
   }
 
-  const unsyncedPiByConv = new Set();
+  function getUnsyncedPiTurnsForConv(convId) {
+    if (!convId) return [];
+    const piTurns = activePiTurnsByConv.get(convId) || [];
+    if (piTurns.length === 0) return [];
+
+    // Find latest native AGY turn timestamp in DOM
+    let maxAgyTs = 0;
+    const native = getNativeConversationTurnList();
+    if (native && native.turnList) {
+      for (const child of native.turnList.children) {
+        if (child.tagName === "DIV" && !child.classList.contains("agy-pi-native-turn")) {
+          const ts = getAgyTurnTimestampMs(child);
+          if (ts > maxAgyTs) maxAgyTs = ts;
+        }
+      }
+    }
+
+    const sinceTs = Math.max(maxAgyTs, lastSyncedPiTsByConv.get(convId) || 0);
+    return piTurns.filter(t => !t.running && t.prompt && getPiTurnStartMs(t) > sinceTs);
+  }
+
+  function syncPiTurnsIntoLexicalBeforeSend(edEl) {
+    const convId = getCurrentConversationId();
+    if (!convId || !edEl) return;
+    const unsynced = getUnsyncedPiTurnsForConv(convId);
+    if (unsynced.length === 0) return;
+
+    const lex = edEl.__lexicalEditor;
+    if (!lex || typeof lex.update !== "function") return;
+
+    const lines = [
+      "<PI_SHARED_CONTEXT>",
+      "[Shared Conversation Context — The user conducted the following turn(s) with the Pi engine in this same chat stream immediately prior to this message. Treat them as part of our direct conversation history without needing to run file-reading tools:]"
+    ];
+    for (const pt of unsynced.slice(-6)) {
+      const timeStr = formatTurnClockTime(getPiTurnStartMs(pt));
+      lines.push(`- [${timeStr} | Pi (${pt.model || "claude-haiku-5.5"})] User: ${pt.prompt}`);
+      if (Array.isArray(pt.tools) && pt.tools.length > 0) {
+        lines.push(`  Tools Executed: ${pt.tools.map(tl => `${tl.name}(${tl.summary || ""})`).join(", ")}`);
+      }
+      if (pt.response) {
+        lines.push(`  Pi Response: ${pt.response.replace(/\s+/g, " ").slice(0, 1200)}`);
+      }
+    }
+    lines.push("</PI_SHARED_CONTEXT>");
+    const ctxBlock = `\n\n${lines.join("\n")}`;
+
+    try {
+      lex.update(() => {
+        const map = lex._pendingEditorState?._nodeMap;
+        if (!map) return;
+        let lastTextNode = null;
+        for (const node of map.values()) {
+          if (node.__type === "text" && typeof node.setTextContent === "function") {
+            lastTextNode = node;
+          }
+        }
+        if (lastTextNode) {
+          const curText = lastTextNode.getTextContent();
+          if (curText.trim() && !curText.includes("<PI_SHARED_CONTEXT>")) {
+            lastTextNode.setTextContent(curText + ctxBlock);
+            lastSyncedPiTsByConv.set(convId, Date.now());
+          }
+        }
+      }, { discrete: true });
+    } catch (e) {}
+  }
 
   window.__agyPiStreamEvent = function(evt) {
     if (!evt) return;
@@ -1895,44 +2742,79 @@
     if (evt.type === "turn_init" && evt.turn) {
       if (!list.some(t => t.turnId === evt.turnId)) {
         list.push(evt.turn);
-        renderPiTurnsInDom(true);
       }
+      updatePiConvMetaFromTurns(convId, list);
+      renderPiTurnsInDom(true);
       return;
     }
 
-    const turn = list.find(t => t.turnId === evt.turnId);
-    if (!turn) return;
+    let turn = list.find(t => t.turnId === evt.turnId);
+    if (!turn) {
+      turn = {
+        turnId: evt.turnId,
+        runId: evt.runId,
+        conversationId: convId,
+        model: piEngineState.model,
+        prompt: "",
+        response: "",
+        tools: [],
+        running: true,
+        startedAt: evt.startedAt || Date.now(),
+        timestamp: evt.timestamp || Date.now()
+      };
+      list.push(turn);
+    }
 
     if (evt.type === "text_delta") {
       turn.response = evt.fullResponse || (turn.response || "") + (evt.delta || "");
+      updatePiConvMetaFromTurns(convId, list);
       renderPiTurnsInDom(true);
     } else if (evt.type === "tool_start") {
       if (!Array.isArray(turn.tools)) turn.tools = [];
       turn.tools.push({ name: evt.toolName, summary: evt.summary });
+      updatePiConvMetaFromTurns(convId, list);
       renderPiTurnsInDom(true);
     } else if (evt.type === "done") {
       turn.running = false;
+      turn.completedAt = evt.completedAt || Date.now();
       if (evt.fullResponse) turn.response = evt.fullResponse;
-      unsyncedPiByConv.add(convId);
+      updatePiConvMetaFromTurns(convId, list);
       renderPiTurnsInDom(true);
       refreshProjectFiles(true);
     } else if (evt.type === "error") {
       turn.running = false;
+      turn.completedAt = evt.completedAt || Date.now();
       turn.response = (turn.response ? turn.response + "\n\n" : "") + `错误: ${evt.error}`;
+      updatePiConvMetaFromTurns(convId, list);
       renderPiTurnsInDom(true);
     }
   };
 
   async function submitPromptToPi() {
     const prompt = readAndClearChatInput();
-    if (!prompt) return;
+    if (!prompt) {
+      const edEl = findActiveChatEditorElement();
+      if (edEl) edEl.focus();
+      const sendBtn = document.getElementById("agy-pi-send-btn");
+      if (sendBtn) {
+        const origHtml = sendBtn.innerHTML;
+        sendBtn.innerHTML = `<span>请先输入内容</span>`;
+        setTimeout(() => {
+          if (sendBtn.isConnected) sendBtn.innerHTML = origHtml;
+        }, 1000);
+      }
+      return;
+    }
 
+    const nowMs = Date.now();
     const convId = getCurrentConversationId() || "global";
     const activeProj = detectCurrentActiveProject();
     const projectPath = activeProj?.folderPath || "";
     const model = piEngineState.model || "surplus/claude-haiku-5.5";
-    const turnId = `pi_turn_${Date.now()}`;
-    const runId = `pi_run_${Date.now()}`;
+    setConvEngineState(convId, "pi", model);
+    const turnId = `pi_turn_${nowMs}`;
+    const runId = `pi_run_${nowMs}`;
+    const agyDomTurns = extractAgyDomTurns();
 
     const list = activePiTurnsByConv.get(convId) || [];
     const newTurn = {
@@ -1945,10 +2827,12 @@
       response: "",
       tools: [],
       running: true,
-      timestamp: Date.now()
+      startedAt: nowMs,
+      timestamp: nowMs
     };
     list.push(newTurn);
     activePiTurnsByConv.set(convId, list);
+    updatePiConvMetaFromTurns(convId, list);
     renderPiTurnsInDom(true);
 
     try {
@@ -1958,14 +2842,44 @@
         conversationId: convId,
         projectPath,
         model,
-        prompt
+        prompt,
+        startedAt: nowMs,
+        agyDomTurns
       });
     } catch (e) {
       newTurn.running = false;
+      newTurn.completedAt = Date.now();
       newTurn.response = `启动 Pi 失败: ${e.message}`;
+      updatePiConvMetaFromTurns(convId, list);
       renderPiTurnsInDom(true);
     }
   }
+
+  // Intercept clicks on Antigravity's native right-side Send button for both Pi mode and AGY shared context sync
+  const onClickCapture = (e) => {
+    const btn = e.target?.closest?.("button");
+    if (!btn) return;
+    const tooltipId = btn.getAttribute("data-tooltip-id") || "";
+    const ariaLabel = (btn.getAttribute("aria-label") || "").toLowerCase();
+    const isNativeSendBtn =
+      tooltipId.includes("input-send-button-send") ||
+      (ariaLabel.includes("send") && Boolean(btn.closest('[class*="input-footer"]')));
+    if (!isNativeSendBtn) return;
+
+    if (piEngineState.engine === "pi") {
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+      submitPromptToPi();
+    } else {
+      setConvEngineState(getCurrentConversationId() || "global", "agy");
+      const edEl = findActiveChatEditorElement();
+      if (edEl) {
+        syncPiTurnsIntoLexicalBeforeSend(edEl);
+      }
+    }
+  };
+  window.addEventListener("click", onClickCapture, true);
 
   const onKeyDownCapture = (e) => {
     if (e.key === "Enter" && !e.shiftKey && !e.isComposing && !e.metaKey && !e.ctrlKey && !e.altKey) {
@@ -1980,20 +2894,8 @@
         return;
       }
 
-      const convId = getCurrentConversationId();
-      if (convId && unsyncedPiByConv.has(convId)) {
-        unsyncedPiByConv.delete(convId);
-        const turns = activePiTurnsByConv.get(convId) || [];
-        const lastTurn = turns[turns.length - 1];
-        if (lastTurn && lastTurn.response) {
-          const brief = lastTurn.response.replace(/\s+/g, " ").slice(0, 260);
-          const ctxNote = `\n\n[系统上下文同步：刚才用户切换到 Pi (${lastTurn.model}) 执行了「${lastTurn.prompt.slice(0, 80)}」，完整记录见 ~/.gemini/antigravity/brain/${convId}/pi_shared_context.md，Pi 回复摘要：${brief}]`;
-          try {
-            edEl.focus();
-            document.execCommand("insertText", false, ctxNote);
-          } catch (err) {}
-        }
-      }
+      setConvEngineState(getCurrentConversationId() || "global", "agy");
+      syncPiTurnsIntoLexicalBeforeSend(edEl);
     }
   };
   window.addEventListener("keydown", onKeyDownCapture, true);
@@ -2108,6 +3010,11 @@
   }
 
   function resolveProjectIdForCard(cardBtn) {
+    const dropWrap = cardBtn.closest("[data-sidebar-section-drop-id]");
+    if (dropWrap) {
+      const dropId = dropWrap.getAttribute("data-sidebar-section-drop-id");
+      if (dropId && dropId !== "main-section-header") return dropId;
+    }
     const headerGroup = cardBtn.closest(".group\\/header");
     if (headerGroup) {
       const link = headerGroup.querySelector('a[href*="section="]');
@@ -2418,6 +3325,7 @@
     refreshProjectFiles(false);
     renderPiEngineBar();
     ensurePiTurnsLoadedForCurrentConv();
+    syncPiStatusToReduxAndSidebar();
   }
 
   let rafPending = false;
@@ -2437,12 +3345,13 @@
       if (!document.getElementById("agy-pi-engine-bar")) {
         renderPiEngineBar();
       }
-      if (!document.getElementById("agy-pi-turns-container")) {
-        renderPiTurnsInDom(false);
-      }
+      renderPiTurnsInDom(false);
       decorateProjectCards();
+      decorateSidebarConversationRows();
     });
   });
+
+  let sidebarTimeTicker = null;
 
   async function startObserver() {
     ensureStyles();
@@ -2457,12 +3366,26 @@
       } catch (e) {}
     }
     loadPiModelsIfNeeded();
+    loadPiConvMeta();
     refreshAll();
     observer.observe(document.body, { childList: true, subtree: true });
+    if (!sidebarTimeTicker) {
+      sidebarTimeTicker = setInterval(() => {
+        decorateSidebarConversationRows();
+      }, 15000);
+    }
   }
 
   function _cleanupForUpgrade() {
     observer.disconnect();
+    if (sidebarTimeTicker) {
+      clearInterval(sidebarTimeTicker);
+      sidebarTimeTicker = null;
+    }
+    if (typeof reduxStoreUnsubscribe === "function") {
+      try { reduxStoreUnsubscribe(); } catch (e) {}
+      reduxStoreUnsubscribe = null;
+    }
     if (webEventSource) {
       try { webEventSource.close(); } catch (e) {}
       webEventSource = null;
@@ -2471,18 +3394,21 @@
     history.replaceState = origReplaceState;
     window.removeEventListener("popstate", checkUrlChange);
     window.removeEventListener("keydown", onKeyDownCapture, true);
+    window.removeEventListener("click", onClickCapture, true);
     document.removeEventListener("mousedown", onMouseDown, true);
     closeTagPopover();
     closeFileContextMenu();
     closePiModelPopover();
     document.getElementById("agy-project-files-panel")?.remove();
     document.getElementById("agy-pi-engine-bar")?.remove();
+    document.getElementById("agy-pi-turns-container")?.remove();
   }
 
   function uninstall() {
     _cleanupForUpgrade();
     document.getElementById("agy-project-tags-bar")?.remove();
     document.getElementById("agy-pi-turns-container")?.remove();
+    document.querySelectorAll(".agy-pi-native-turn").forEach(el => el.remove());
     document.getElementById("agy-project-tags-style")?.remove();
     const nativeModelBtn = document.querySelector('[data-testid="model-selector-trigger"]');
     if (nativeModelBtn) nativeModelBtn.style.display = "";
@@ -2512,5 +3438,5 @@
   } else {
     startObserver();
   }
-  return "injected_v6_ok";
+  return "injected_v10_ok";
 })();
